@@ -1,0 +1,22 @@
+{
+  "name": "best-value",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Best Value multi-category marketplace",
+  "workspaces": ["frontend", "backend"],
+  "scripts": {
+    "dev": "concurrently -n frontend,backend -c cyan,green \"npm run dev --workspace=@best-value/frontend\" \"npm run dev --workspace=@best-value/backend\"",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces",
+    "db:generate": "npm run prisma:generate --workspace=@best-value/backend",
+    "db:migrate": "npm run prisma:migrate --workspace=@best-value/backend",
+    "db:studio": "npm run prisma:studio --workspace=@best-value/backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=20.9.0",
+    "npm": ">=10"
+  }
+}
