@@ -2,7 +2,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
 
 export interface ApiResponse<T> {
   success: boolean;
-  data: T;
+  data?: T;
 }
 
 export class ApiClientError extends Error {
@@ -24,9 +24,30 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     throw new ApiClientError(response.status, payload.error?.message ?? "Request failed");
   }
 
-  return payload.data;
+  return payload.data as T;
 }
 
 export interface HealthStatus { status: string; timestamp: string; }
 
 export const getApiHealth = () => apiFetch<HealthStatus>("/health");
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  role: "CUSTOMER" | "SELLER" | "ADMIN";
+  createdAt: string;
+}
+
+interface AuthPayload { user: AuthUser; }
+
+export const registerUser = (input: { email: string; password: string; firstName: string; lastName?: string }) =>
+  apiFetch<AuthPayload>("/auth/register", { method: "POST", body: JSON.stringify(input) });
+
+export const loginUser = (input: { email: string; password: string }) =>
+  apiFetch<AuthPayload>("/auth/login", { method: "POST", body: JSON.stringify(input) });
+
+export const logoutUser = () => apiFetch<{ message: string }>("/auth/logout", { method: "POST" });
+
+export const getCurrentUser = () => apiFetch<AuthPayload>("/auth/me");

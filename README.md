@@ -83,8 +83,8 @@ npm run dev --workspace=@best-value/backend
 | `backend/.env` | `PORT` | API port, default `4000`. |
 | `backend/.env` | `NODE_ENV` | `development`, `test`, or `production`. |
 | `backend/.env` | `FRONTEND_URL` | Exact browser origin allowed by CORS. |
-| `backend/.env` | `JWT_SECRET` | Future auth signing secret; use 32+ random characters. |
-| `backend/.env` | `JWT_EXPIRES_IN` | Future JWT lifetime, default `7d`. |
+| `backend/.env` | `JWT_SECRET` | Required authentication signing secret; use 32+ random characters. |
+| `backend/.env` | `JWT_EXPIRES_IN` | JWT lifetime, default `7d`. |
 | `frontend/.env.local` | `NEXT_PUBLIC_API_URL` | Public API base URL, default `http://localhost:4000/api`. |
 
 ## Phase 1 contents
@@ -96,6 +96,19 @@ npm run dev --workspace=@best-value/backend
 - Product-level stock for simple products and variant-level stock for configurable products
 - `OrderItem.unitPrice`, `totalPrice`, product-name, and SKU snapshots so historical orders do not depend on current catalog prices
 - Object-storage-ready image URLs rather than binary image data in MySQL; Stripe-ready provider/reference fields without payment processing
+
+## Phase 2 authentication
+
+- `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, and `GET /api/auth/me`
+- Bcrypt password hashing and Prisma-only database access from the Express backend
+- Signed JWT session held in an HTTP-only, `SameSite=Lax` cookie. The cookie is `Secure` in production and never exposed to browser JavaScript or local storage.
+- Registration, login, account, and logout UI at `/register`, `/login`, and `/account`
+
+Before starting the backend, set a unique secret in `backend/.env`:
+
+```env
+JWT_SECRET=generate-a-unique-random-value-with-at-least-32-characters
+```
 
 ## Verification
 
