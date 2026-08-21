@@ -1,3 +1,5 @@
+import type { Category, ProductDetail, ProductListResult } from "@/types/product";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
 
 export interface ApiResponse<T> {
@@ -51,3 +53,27 @@ export const loginUser = (input: { email: string; password: string }) =>
 export const logoutUser = () => apiFetch<{ message: string }>("/auth/logout", { method: "POST" });
 
 export const getCurrentUser = () => apiFetch<AuthPayload>("/auth/me");
+
+export interface ProductQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  categoryId?: string;
+  minPrice?: string;
+  maxPrice?: string;
+  sort?: "relevance" | "price" | "newest";
+  order?: "asc" | "desc";
+}
+
+const toQueryString = (query: ProductQuery) => {
+  const params = new URLSearchParams();
+  Object.entries(query).forEach(([key, value]) => { if (value !== undefined && value !== "") params.set(key, String(value)); });
+  const result = params.toString();
+  return result ? `?${result}` : "";
+};
+
+export const getProducts = (query: ProductQuery = {}) => apiFetch<ProductListResult>(`/products${toQueryString(query)}`);
+export const getProduct = (id: string) => apiFetch<{ product: ProductDetail }>(`/products/${id}`);
+export const getCategories = () => apiFetch<{ items: Category[] }>("/categories");
+export const getCategory = (slug: string) => apiFetch<{ category: Category }>(`/categories/${slug}`);

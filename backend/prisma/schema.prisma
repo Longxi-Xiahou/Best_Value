@@ -108,6 +108,8 @@ model Product {
   @@index([categoryId, status])
   @@index([sellerId, status])
   @@index([brand])
+  @@index([status, basePrice])
+  @@index([status, createdAt])
 }
 
 model ProductImage {

@@ -1,22 +1,21 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { CategoryNavigation } from "@/components/category-navigation";
 import { ProductCard } from "@/components/product-card";
-import type { ProductSummary } from "@/types/product";
-
-const starterCategories = [
-  { id: "electronics", name: "Electronics", slug: "electronics" },
-  { id: "home", name: "Home & Garden", slug: "home-garden" },
-  { id: "fashion", name: "Fashion", slug: "fashion" },
-  { id: "sports", name: "Sports & Outdoors", slug: "sports-outdoors" },
-];
-
-const previewProducts: ProductSummary[] = [
-  { id: "preview-1", title: "Your marketplace catalog starts here", slug: "catalog-preview", price: 0, currency: "USD", categoryName: "Coming soon" },
-  { id: "preview-2", title: "Flexible products and variants", slug: "variants-preview", price: 0, currency: "USD", categoryName: "Coming soon" },
-  { id: "preview-3", title: "Built for every category", slug: "categories-preview", price: 0, currency: "USD", categoryName: "Coming soon" },
-];
+import { getCategories, getProducts } from "@/lib/api";
+import type { Category, ProductSummary } from "@/types/product";
 
 export default function HomePage() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<ProductSummary[]>([]);
+
+  useEffect(() => {
+    void getCategories().then(({ items }) => setCategories(items)).catch(() => setCategories([]));
+    void getProducts({ limit: 3, sort: "newest" }).then(({ items }) => setProducts(items)).catch(() => setProducts([]));
+  }, []);
+
   return (
     <div>
       <section className="bg-brand-900 py-20 text-white">
@@ -29,9 +28,9 @@ export default function HomePage() {
       </section>
       <section className="mx-auto max-w-7xl space-y-10 px-4 py-14 sm:px-6 lg:px-8">
         <div><h2 className="text-2xl font-bold">Shop by category</h2><p className="mt-1 text-slate-600">Categories can nest as deeply as the catalog needs.</p></div>
-        <CategoryNavigation categories={starterCategories} />
-        <div className="flex items-end justify-between"><div><h2 className="text-2xl font-bold">Ready for your catalog</h2><p className="mt-1 text-slate-600">Live product data arrives in Phase 3.</p></div><Link href="/products" className="text-sm font-semibold text-brand-600 hover:text-brand-900">View all</Link></div>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{previewProducts.map((product) => <ProductCard key={product.id} product={product} />)}</div>
+        <CategoryNavigation categories={categories} />
+        <div className="flex items-end justify-between"><div><h2 className="text-2xl font-bold">Fresh in the catalog</h2><p className="mt-1 text-slate-600">Explore new products from across the marketplace.</p></div><Link href="/products" className="text-sm font-semibold text-brand-600 hover:text-brand-900">View all</Link></div>
+        {products.length ? <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{products.map((product) => <ProductCard key={product.id} product={product} />)}</div> : <p className="text-slate-600">Catalog products will appear here once available.</p>}
       </section>
     </div>
   );

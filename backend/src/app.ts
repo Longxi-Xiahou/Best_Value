@@ -8,6 +8,8 @@ import { env } from "./config/env.js";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler.js";
 import { healthRouter } from "./routes/health.routes.js";
 import { authRouter } from "./routes/auth.routes.js";
+import { categoryRouter } from "./routes/category.routes.js";
+import { productRouter } from "./routes/product.routes.js";
 
 export const app = express();
 
@@ -21,5 +23,7 @@ app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 500, standardHeaders: "draft-
 
 app.use("/api", healthRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/categories", categoryRouter);
+app.use("/api/products", productRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);

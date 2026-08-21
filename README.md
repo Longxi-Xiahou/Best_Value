@@ -110,6 +110,18 @@ Before starting the backend, set a unique secret in `backend/.env`:
 JWT_SECRET=generate-a-unique-random-value-with-at-least-32-characters
 ```
 
+## Phase 3 catalog
+
+The public catalog is available at `/products`, data-driven category pages are available at `/categories/[slug]`, and public product details are available at `/products/[id]`.
+
+After applying migrations, populate the local development catalog with fictional products and placeholder images:
+
+```bash
+npm run prisma:seed --workspace=@best-value/backend
+```
+
+The seed is idempotent for its named categories, attributes, seller, and product slugs. It only uses the database named by `backend/.env` and never accesses unrelated databases.
+
 ## Verification
 
 ```bash
