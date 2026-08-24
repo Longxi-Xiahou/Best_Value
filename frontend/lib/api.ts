@@ -1,4 +1,4 @@
-import type { Category, ProductDetail, ProductListResult } from "@/types/product";
+import type { Cart, Category, OrderDetail, OrderSummary, ProductDetail, ProductListResult } from "@/types/product";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
 
@@ -77,3 +77,12 @@ export const getProducts = (query: ProductQuery = {}) => apiFetch<ProductListRes
 export const getProduct = (id: string) => apiFetch<{ product: ProductDetail }>(`/products/${id}`);
 export const getCategories = () => apiFetch<{ items: Category[] }>("/categories");
 export const getCategory = (slug: string) => apiFetch<{ category: Category }>(`/categories/${slug}`);
+
+export const getCart = () => apiFetch<Cart>("/cart");
+export const addCartItem = (input: { productId: string; variantId?: string; quantity: number }) => apiFetch<Cart>("/cart/items", { method: "POST", body: JSON.stringify(input) });
+export const updateCartItem = (id: string, quantity: number) => apiFetch<Cart>(`/cart/items/${id}`, { method: "PATCH", body: JSON.stringify({ quantity }) });
+export const removeCartItem = (id: string) => apiFetch<Cart>(`/cart/items/${id}`, { method: "DELETE" });
+export const clearCart = () => apiFetch<Cart>("/cart", { method: "DELETE" });
+export const createOrder = (shippingAddress: { fullName: string; addressLine1: string; addressLine2?: string; city: string; state?: string; postalCode: string; country: string }) => apiFetch<{ order: OrderDetail }>("/orders", { method: "POST", body: JSON.stringify({ shippingAddress }) });
+export const getOrders = () => apiFetch<{ items: OrderSummary[] }>("/orders");
+export const getOrder = (id: string) => apiFetch<{ order: OrderDetail }>(`/orders/${id}`);

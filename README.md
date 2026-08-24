@@ -122,6 +122,23 @@ npm run prisma:seed --workspace=@best-value/backend
 
 The seed is idempotent for its named categories, attributes, seller, and product slugs. It only uses the database named by `backend/.env` and never accesses unrelated databases.
 
+## Phase 4 cart and orders
+
+Authenticated customers can add active products or variants to `/cart`, update or remove items, and place a simulated order from `/checkout`. Orders begin in `PENDING` status; no payment provider is connected. Order creation recalculates prices server-side, checks stock inside a serializable transaction, snapshots product/variant names and prices, decrements inventory, and clears the cart.
+
+Available authenticated API routes:
+
+- `GET /api/cart`
+- `POST /api/cart/items`
+- `PATCH /api/cart/items/:id`
+- `DELETE /api/cart/items/:id`
+- `DELETE /api/cart`
+- `POST /api/orders`
+- `GET /api/orders`
+- `GET /api/orders/:id`
+
+Frontend routes: `/cart`, `/checkout`, `/orders`, and `/orders/[id]`.
+
 ## Verification
 
 ```bash

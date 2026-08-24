@@ -201,6 +201,7 @@ model CartItem {
   @@index([cartId])
   @@index([productId])
   @@index([variantId])
+  @@unique([cartId, productId, variantId])
 }
 
 model Address {
@@ -252,6 +253,7 @@ model OrderItem {
   variantId   String?
   sellerId    String
   productName String          @db.VarChar(255)
+  variantName String?         @db.VarChar(500)
   sku         String?         @db.VarChar(191)
   quantity    Int
   unitPrice   Decimal         @db.Decimal(12, 2)

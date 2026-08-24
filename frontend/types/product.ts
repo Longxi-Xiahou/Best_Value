@@ -68,3 +68,53 @@ export interface ProductListResult {
   items: ProductSummary[];
   pagination: Pagination;
 }
+
+export interface CartItem {
+  id: string;
+  product: { id: string; title: string; image: { url: string; altText: string | null } | null };
+  variant: { id: string; sku: string; label: string | null } | null;
+  quantity: number;
+  unitPrice: number;
+  currency: string;
+  lineTotal: number;
+  availableStock: number;
+}
+
+export interface Cart {
+  id: string | null;
+  items: CartItem[];
+  subtotal: number;
+  currency: string;
+  itemCount: number;
+}
+
+export interface OrderItem {
+  id: string;
+  productId?: string;
+  variantId?: string | null;
+  productName: string;
+  variantName: string | null;
+  sku?: string | null;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+export interface OrderSummary {
+  id: string;
+  status: string;
+  currency: string;
+  subtotal: number;
+  shipping: number;
+  total: number;
+  createdAt: string;
+  itemCount: number;
+  previewItems: Array<{ productName: string; variantName: string | null; quantity: number }>;
+}
+
+export interface OrderDetail extends OrderSummary {
+  tax: number;
+  updatedAt: string;
+  shippingAddress: { fullName: string; addressLine1: string; addressLine2?: string; city: string; state?: string; postalCode: string; country: string };
+  items: OrderItem[];
+}

@@ -31,13 +31,15 @@ export function Navigation() {
         <Link href="/" className="text-xl font-bold tracking-tight text-brand-900">Best Value</Link>
         <div className="hidden items-center gap-6 text-sm font-medium text-slate-600 md:flex">
           {navItems.map((item) => <Link key={item.href} href={item.href} className="hover:text-brand-600">{item.label}</Link>)}
-        </div>
+          </div>
         <div className="flex items-center gap-3 text-sm font-medium">
           {isLoading ? <span className="text-slate-500">Loading…</span> : user ? <>
             <Link href="/account" className="text-slate-700 hover:text-brand-600">Account</Link>
             <button type="button" onClick={handleLogout} disabled={isLoggingOut} className="rounded-md bg-slate-100 px-4 py-2 text-slate-800 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60">
               {isLoggingOut ? "Signing out…" : "Log out"}
             </button>
+            <Link href="/cart" className="text-slate-700 hover:text-brand-600">Cart</Link>
+            <Link href="/orders" className="text-slate-700 hover:text-brand-600">Orders</Link>
           </> : <>
             <Link href="/login" className="text-slate-700 hover:text-brand-600">Log in</Link>
             <Link href="/register" className="rounded-md bg-brand-600 px-4 py-2 text-white hover:bg-brand-900">Register</Link>

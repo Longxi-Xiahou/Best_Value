@@ -24,7 +24,8 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await login({ email, password });
-      router.push("/account");
+      const nextPath = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("next") : null;
+      router.push(nextPath?.startsWith("/") ? nextPath : "/account");
       router.refresh();
     } catch (requestError) {
       setError(requestError instanceof ApiClientError ? requestError.message : "Unable to log in. Please try again.");

@@ -3,16 +3,21 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ApiClientError, getProduct } from "@/lib/api";
+import { addCartItem } from "@/lib/api";
+import { useAuth } from "@/components/auth-provider";
 import type { ProductDetail as ProductDetailType } from "@/types/product";
 
 const formatPrice = (price: number, currency: string) => new Intl.NumberFormat("en-US", { style: "currency", currency }).format(price);
 
 export function ProductDetail({ id }: { id: string }) {
+  const { user } = useAuth();
   const [product, setProduct] = useState<ProductDetailType | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedVariantId, setSelectedVariantId] = useState("");
+  const [addError, setAddError] = useState<string | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -39,6 +44,13 @@ export function ProductDetail({ id }: { id: string }) {
   const selectedVariant = product.variants.find((variant) => variant.id === selectedVariantId);
   const price = selectedVariant?.price ?? product.price;
   const inStock = selectedVariant ? selectedVariant.inStock : product.inStock;
+  const addToCart = async () => {
+    if (!user) { setAddError("Please log in before adding items to your cart."); return; }
+    setAddError(null); setIsAdding(true);
+    try { await addCartItem({ productId: product.id, variantId: selectedVariantId || undefined, quantity: 1 }); }
+    catch (requestError) { setAddError(requestError instanceof ApiClientError ? requestError.message : "Unable to add this item to your cart."); }
+    finally { setIsAdding(false); }
+  };
   const image = product.images[selectedImageIndex];
 
   return (
@@ -56,6 +68,8 @@ export function ProductDetail({ id }: { id: string }) {
           <p className="text-3xl font-bold text-brand-900">{formatPrice(price, product.currency)}</p>
           <p className={`font-semibold ${inStock ? "text-emerald-700" : "text-slate-500"}`}>{inStock ? "In stock" : "Currently unavailable"}</p>
           {product.variants.length > 0 && <label className="block text-sm font-semibold text-slate-700">Choose an option<select value={selectedVariantId} onChange={(event) => setSelectedVariantId(event.target.value)} className="mt-2 block w-full rounded-md border border-slate-300 px-3 py-2">{product.variants.map((variant) => <option key={variant.id} value={variant.id} disabled={!variant.inStock}>{variant.attributes.map((attribute) => `${attribute.name}: ${attribute.value}`).join(" · ")}{variant.inStock ? "" : " (unavailable)"}</option>)}</select></label>}
+          {addError && <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{addError}</p>}
+          <button type="button" disabled={!inStock || isAdding} onClick={() => void addToCart()} className="w-full rounded-md bg-brand-600 px-4 py-3 font-semibold text-white hover:bg-brand-900 disabled:cursor-not-allowed disabled:opacity-60">{isAdding ? "Adding…" : user ? "Add to cart" : "Log in to add to cart"}</button>
           <p className="leading-7 text-slate-700">{product.description}</p>
           {product.attributes.length > 0 && <div><h2 className="text-lg font-semibold">Product details</h2><dl className="mt-3 divide-y divide-slate-200 rounded-lg border border-slate-200">{product.attributes.map((attribute) => <div key={attribute.code} className="grid grid-cols-2 gap-4 px-4 py-3 text-sm"><dt className="font-medium text-slate-600">{attribute.name}</dt><dd>{attribute.value}</dd></div>)}</dl></div>}
           <div className="rounded-lg bg-slate-50 p-4 text-sm"><p className="font-semibold text-slate-800">Sold by {product.seller.storeName}</p>{product.seller.description && <p className="mt-1 text-slate-600">{product.seller.description}</p>}</div>
