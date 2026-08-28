@@ -35,6 +35,23 @@ enum OrderStatus {
   REFUNDED
 }
 
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum RefundStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique @db.VarChar(191)
@@ -64,6 +81,7 @@ model Seller {
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   products    Product[]
   orderItems  OrderItem[]
+  allocations SellerOrderAllocation[]
 }
 
 model Category {
@@ -236,10 +254,13 @@ model Order {
   shippingAddress Json
   paymentProvider String?     @db.VarChar(50)
   paymentRef      String?     @db.VarChar(191)
+  paymentStatus   PaymentStatus @default(PENDING)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   user            User        @relation(fields: [userId], references: [id], onDelete: Restrict)
   items           OrderItem[]
+  payments        Payment[]
+  allocations     SellerOrderAllocation[]
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
@@ -265,6 +286,64 @@ model OrderItem {
   seller      Seller          @relation(fields: [sellerId], references: [id], onDelete: Restrict)
 
   @@index([orderId])
+  @@index([sellerId, createdAt])
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  orderId           String
+  provider          String        @db.VarChar(50)
+  providerPaymentId String?       @unique @db.VarChar(255)
+  checkoutSessionId String?       @unique @db.VarChar(255)
+  status            PaymentStatus @default(PENDING)
+  amount            Decimal       @db.Decimal(12, 2)
+  currency          String        @db.Char(3)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  order             Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  refunds           Refund[]
+
+  @@index([orderId, status])
+  @@index([provider, status])
+}
+
+model Refund {
+  id               String       @id @default(cuid())
+  paymentId        String
+  providerRefundId String?      @unique @db.VarChar(255)
+  amount           Decimal      @db.Decimal(12, 2)
+  currency         String       @db.Char(3)
+  status           RefundStatus @default(PENDING)
+  reason           String?      @db.VarChar(255)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  payment          Payment      @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId, status])
+}
+
+model ProcessedStripeEvent {
+  id          String   @id @default(cuid())
+  eventId     String   @unique @db.VarChar(255)
+  type        String   @db.VarChar(100)
+  processedAt DateTime @default(now())
+}
+
+model SellerOrderAllocation {
+  id                String   @id @default(cuid())
+  orderId           String
+  sellerId          String
+  grossAmount       Decimal  @db.Decimal(12, 2)
+  platformFeeAmount Decimal  @db.Decimal(12, 2)
+  sellerNetAmount   Decimal  @db.Decimal(12, 2)
+  feeRate           Decimal  @db.Decimal(5, 2)
+  currency          String   @db.Char(3)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  seller            Seller   @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+
+  @@unique([orderId, sellerId])
   @@index([sellerId, createdAt])
 }
 

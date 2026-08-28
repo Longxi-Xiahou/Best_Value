@@ -86,6 +86,7 @@ export const clearCart = () => apiFetch<Cart>("/cart", { method: "DELETE" });
 export const createOrder = (shippingAddress: { fullName: string; addressLine1: string; addressLine2?: string; city: string; state?: string; postalCode: string; country: string }) => apiFetch<{ order: OrderDetail }>("/orders", { method: "POST", body: JSON.stringify({ shippingAddress }) });
 export const getOrders = () => apiFetch<{ items: OrderSummary[] }>("/orders");
 export const getOrder = (id: string) => apiFetch<{ order: OrderDetail }>(`/orders/${id}`);
+export const createCheckoutSession = (orderId: string) => apiFetch<{ payment: { id: string; provider: string; status: string; amount: number; currency: string; createdAt: string }; checkoutUrl: string | null }>("/payments/create-checkout-session", { method: "POST", body: JSON.stringify({ orderId }) });
 export const getProductReviews = (id: string) => apiFetch<ReviewResult>(`/products/${id}/reviews`);
 export const createProductReview = (id: string, input: { rating: number; title?: string; body: string }) => apiFetch<{ review: ReviewResult["items"][number] }>(`/products/${id}/reviews`, { method: "POST", body: JSON.stringify(input) });
 export const updateReview = (id: string, input: Partial<{ rating: number; title: string; body: string }>) => apiFetch<{ review: ReviewResult["items"][number] }>(`/reviews/${id}`, { method: "PATCH", body: JSON.stringify(input) });
@@ -101,3 +102,4 @@ export const updateSellerProduct = (id: string, input: Record<string, unknown>) 
 export const updateSellerInventory = (id: string, input: { stockQuantity: number; variantId?: string }) => apiFetch<{ product: Record<string, unknown> }>(`/seller/products/${id}/inventory`, { method: "PATCH", body: JSON.stringify(input) });
 export const getSellerOrders = () => apiFetch<{ items: Array<Record<string, unknown>> }>("/seller/orders");
 export const getSellerOrder = (id: string) => apiFetch<{ order: Record<string, unknown> }>(`/seller/orders/${id}`);
+export const getSellerTransactions = () => apiFetch<{ items: Array<{ id: string; orderId: string; currency: string; grossAmount: number; platformFeeAmount: number; sellerNetAmount: number; feeRate: number; paymentStatus: string; orderStatus: string; createdAt: string }> }>("/seller/transactions");

@@ -8,6 +8,9 @@ const envSchema = z.object({
   FRONTEND_URL: z.string().url().default("http://localhost:3000"),
   JWT_SECRET: z.string().min(32, "JWT_SECRET must contain at least 32 characters"),
   JWT_EXPIRES_IN: z.string().default("7d"),
+  STRIPE_SECRET_KEY: z.string().min(1).optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
+  PLATFORM_FEE_PERCENT: z.coerce.number().finite().min(0).max(100).default(10),
 });
 
 const parsed = envSchema.safeParse(process.env);

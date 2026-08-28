@@ -103,6 +103,7 @@ export interface OrderItem {
 export interface OrderSummary {
   id: string;
   status: string;
+  paymentStatus: string;
   currency: string;
   subtotal: number;
   shipping: number;

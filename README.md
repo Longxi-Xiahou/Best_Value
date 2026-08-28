@@ -139,6 +139,17 @@ Available authenticated API routes:
 
 Frontend routes: `/cart`, `/checkout`, `/orders`, and `/orders/[id]`.
 
+## Phase 6 payments and marketplace accounting
+
+Phase 6 adds a Stripe test-mode payment foundation around the existing customer order:
+
+- `POST /api/payments/create-checkout-session` creates a server-priced Checkout Session for the authenticated customer’s order.
+- `POST /api/payments/webhook` verifies Stripe signatures against the raw request body and idempotently synchronizes payment/refund state.
+- Payment status is separate from fulfillment status. Seller allocations snapshot gross merchandise value, platform fee rate/amount, and estimated seller net using Decimal-safe calculations.
+- Seller transaction visibility is available at `GET /api/seller/transactions`; admin inspection/refund APIs are available under `/api/admin/payments`, `/api/admin/allocations`, and `/api/admin/orders/:id/refund`.
+
+Configure `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `PLATFORM_FEE_PERCENT` in `backend/.env` with Stripe test credentials only. No Stripe Connect transfers or seller payouts are implemented.
+
 ## Phase 5 marketplace operations
 
 Phase 5 adds the first multi-seller workflows without introducing a separate service or payment provider:

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { requireAuth } from "../middleware/auth.middleware.js";
 import { requireSeller } from "../middleware/role.middleware.js";
 import { dashboard, inventory, me, onboard, orderDetail, orders, productCreate, productDetail, productUpdate, products, publicProfile } from "../controllers/seller.controller.js";
+import { transactions } from "../controllers/seller-transaction.controller.js";
 
 export const sellerRouter = Router();
 sellerRouter.post("/me", requireAuth, onboard);
@@ -18,3 +19,4 @@ protectedSellerRouter.patch("/products/:id", productUpdate);
 protectedSellerRouter.patch("/products/:id/inventory", inventory);
 protectedSellerRouter.get("/orders", orders);
 protectedSellerRouter.get("/orders/:id", orderDetail);
+protectedSellerRouter.get("/transactions", transactions);

@@ -1,22 +1,24 @@
 import { Prisma, ProductStatus } from "@prisma/client";
 import { prisma } from "../config/prisma.js";
+import { env } from "../config/env.js";
 import type { ShippingAddressInput } from "../validators/commerce.validation.js";
 import { ApiError } from "../utils/api-error.js";
 import { getCartForCheckout, variantLabel } from "./cart.service.js";
 
 const orderSummarySelect = {
-  id: true, status: true, currency: true, subtotalAmount: true, shippingAmount: true, totalAmount: true, createdAt: true,
+  id: true, status: true, paymentStatus: true, currency: true, subtotalAmount: true, shippingAmount: true, totalAmount: true, createdAt: true,
   items: { select: { id: true, productName: true, variantName: true, quantity: true, unitPrice: true, totalPrice: true } },
 } satisfies Prisma.OrderSelect;
 
 const orderDetailSelect = {
-  id: true, status: true, currency: true, subtotalAmount: true, shippingAmount: true, taxAmount: true, totalAmount: true, shippingAddress: true, createdAt: true, updatedAt: true,
+  id: true, status: true, paymentStatus: true, currency: true, subtotalAmount: true, shippingAmount: true, taxAmount: true, totalAmount: true, shippingAddress: true, createdAt: true, updatedAt: true,
   items: { select: { id: true, productId: true, variantId: true, productName: true, variantName: true, sku: true, quantity: true, unitPrice: true, totalPrice: true }, orderBy: { createdAt: "asc" } },
 } satisfies Prisma.OrderSelect;
 
 const mapOrder = (order: Prisma.OrderGetPayload<{ select: typeof orderDetailSelect }>) => ({
   id: order.id,
   status: order.status,
+  paymentStatus: order.paymentStatus,
   currency: order.currency,
   subtotal: Number(order.subtotalAmount),
   shipping: Number(order.shippingAmount),
@@ -73,6 +75,14 @@ export const createOrder = async (userId: string, shippingAddress: ShippingAddre
       },
       select: orderDetailSelect,
     });
+    const sellerTotals = new Map<string, number>();
+    for (const item of snapshots) sellerTotals.set(item.sellerId, (sellerTotals.get(item.sellerId) ?? 0) + item.totalPriceCents);
+    const feeRate = new Prisma.Decimal(env.PLATFORM_FEE_PERCENT);
+    await tx.sellerOrderAllocation.createMany({ data: [...sellerTotals.entries()].map(([sellerId, grossCents]) => {
+      const gross = decimal(grossCents);
+      const fee = gross.mul(feeRate).dividedBy(100).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
+      return { orderId: created.id, sellerId, grossAmount: gross, platformFeeAmount: fee, sellerNetAmount: gross.minus(fee), feeRate, currency: orderCurrency };
+    }) });
     await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
     return created;
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
@@ -82,7 +92,7 @@ export const createOrder = async (userId: string, shippingAddress: ShippingAddre
 
 export const listOrders = async (userId: string) => {
   const orders = await prisma.order.findMany({ where: { userId }, select: orderSummarySelect, orderBy: { createdAt: "desc" } });
-  return orders.map((order) => ({ id: order.id, status: order.status, currency: order.currency, subtotal: Number(order.subtotalAmount), shipping: Number(order.shippingAmount), total: Number(order.totalAmount), createdAt: order.createdAt, itemCount: order.items.reduce((count, item) => count + item.quantity, 0), previewItems: order.items.slice(0, 3).map((item) => ({ productName: item.productName, variantName: item.variantName, quantity: item.quantity })) }));
+  return orders.map((order) => ({ id: order.id, status: order.status, paymentStatus: order.paymentStatus, currency: order.currency, subtotal: Number(order.subtotalAmount), shipping: Number(order.shippingAmount), total: Number(order.totalAmount), createdAt: order.createdAt, itemCount: order.items.reduce((count, item) => count + item.quantity, 0), previewItems: order.items.slice(0, 3).map((item) => ({ productName: item.productName, variantName: item.variantName, quantity: item.quantity })) }));
 };
 
 export const getOrder = async (userId: string, orderId: string) => {

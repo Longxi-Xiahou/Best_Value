@@ -15,6 +15,9 @@ import { orderRouter } from "./routes/order.routes.js";
 import { sellerRouter, protectedSellerRouter } from "./routes/seller.routes.js";
 import { adminRouter } from "./routes/admin.routes.js";
 import { reviewRouter } from "./routes/review.routes.js";
+import { paymentRouter } from "./routes/payment.routes.js";
+import { paymentAdminRouter } from "./routes/payment-admin.routes.js";
+import { webhook } from "./controllers/payment.controller.js";
 
 export const app = express();
 
@@ -22,6 +25,7 @@ app.disable("x-powered-by");
 app.use(helmet());
 app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
 app.use(cookieParser());
+app.post("/api/payments/webhook", express.raw({ type: "application/json" }), webhook);
 app.use(express.json({ limit: "1mb" }));
 app.use(morgan(env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 500, standardHeaders: "draft-8", legacyHeaders: false }));
@@ -35,6 +39,8 @@ app.use("/api/orders", orderRouter);
 app.use("/api/sellers", sellerRouter);
 app.use("/api/seller", protectedSellerRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/admin", paymentAdminRouter);
 app.use("/api", reviewRouter);
+app.use("/api/payments", paymentRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);
