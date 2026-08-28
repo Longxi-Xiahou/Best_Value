@@ -1,0 +1,18 @@
+import type { RequestHandler } from "express";
+import { getSellerDashboard, getSellerForUser, getPublicSeller, onboardSeller } from "../services/seller.service.js";
+import { getSellerProduct, listSellerProducts, createSellerProduct, updateSellerInventory, updateSellerProduct } from "../services/seller-product.service.js";
+import { getSellerOrder, listSellerOrders } from "../services/seller-order.service.js";
+import { asyncHandler } from "../utils/async-handler.js";
+import { sellerOnboardingSchema, sellerParamsSchema, sellerProductCreateSchema, sellerProductParamsSchema, sellerProductUpdateSchema, inventoryUpdateSchema, sellerOrderParamsSchema } from "../validators/seller.validation.js";
+
+export const onboard: RequestHandler = asyncHandler(async (request, response) => { const input = sellerOnboardingSchema.parse(request.body); response.status(201).json({ success: true, data: { seller: await onboardSeller(request.auth!.userId, input.storeName, input.description) } }); });
+export const me: RequestHandler = asyncHandler(async (request, response) => { response.json({ success: true, data: { seller: await getSellerForUser(request.auth!.userId) } }); });
+export const publicProfile: RequestHandler = asyncHandler(async (request, response) => { const { id } = sellerParamsSchema.parse(request.params); response.json({ success: true, data: { seller: await getPublicSeller(id) } }); });
+export const dashboard: RequestHandler = asyncHandler(async (request, response) => { response.json({ success: true, data: await getSellerDashboard(request.seller!.id) }); });
+export const products: RequestHandler = asyncHandler(async (request, response) => { response.json({ success: true, data: { items: await listSellerProducts(request.seller!.id) } }); });
+export const productDetail: RequestHandler = asyncHandler(async (request, response) => { const { id } = sellerProductParamsSchema.parse(request.params); response.json({ success: true, data: { product: await getSellerProduct(request.seller!.id, id) } }); });
+export const productCreate: RequestHandler = asyncHandler(async (request, response) => { const input = sellerProductCreateSchema.parse(request.body); response.status(201).json({ success: true, data: { product: await createSellerProduct(request.seller!.id, input) } }); });
+export const productUpdate: RequestHandler = asyncHandler(async (request, response) => { const { id } = sellerProductParamsSchema.parse(request.params); const input = sellerProductUpdateSchema.parse(request.body); response.json({ success: true, data: { product: await updateSellerProduct(request.seller!.id, id, input) } }); });
+export const inventory: RequestHandler = asyncHandler(async (request, response) => { const { id } = sellerProductParamsSchema.parse(request.params); const input = inventoryUpdateSchema.parse(request.body); response.json({ success: true, data: { product: await updateSellerInventory(request.seller!.id, id, input.stockQuantity, input.variantId) } }); });
+export const orders: RequestHandler = asyncHandler(async (request, response) => { response.json({ success: true, data: { items: await listSellerOrders(request.seller!.id) } }); });
+export const orderDetail: RequestHandler = asyncHandler(async (request, response) => { const { id } = sellerOrderParamsSchema.parse(request.params); response.json({ success: true, data: { order: await getSellerOrder(request.seller!.id, id) } }); });

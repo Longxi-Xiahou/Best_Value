@@ -1,0 +1,9 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { ApiClientError, getSeller } from "@/lib/api";
+import type { ProductSummary } from "@/types/product";
+import { ProductCard } from "./product-card";
+
+export function SellerProfile({ id }: { id: string }) { const [seller, setSeller] = useState<{ storeName: string; description: string | null; products: ProductSummary[] } | null>(null); const [error, setError] = useState<string | null>(null); useEffect(() => { void getSeller(id).then(({ seller: loaded }) => setSeller(loaded)).catch((e: unknown) => setError(e instanceof ApiClientError ? e.message : "Unable to load seller.")); }, [id]); if (error) return <section className="mx-auto max-w-6xl px-4 py-16"><h1 className="text-3xl font-bold">{error}</h1><Link href="/products" className="mt-5 inline-flex font-semibold text-brand-600">Browse products →</Link></section>; if (!seller) return <section className="mx-auto max-w-6xl px-4 py-16 text-slate-600">Loading store…</section>; return <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6"><p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-600">Store</p><h1 className="mt-2 text-4xl font-bold">{seller.storeName}</h1>{seller.description && <p className="mt-3 max-w-2xl text-slate-600">{seller.description}</p>}<h2 className="mt-10 text-2xl font-bold">Active listings</h2>{seller.products.length ? <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{seller.products.map((product) => <ProductCard key={product.id} product={product} />)}</div> : <p className="mt-4 text-slate-600">This store has no active listings yet.</p>}</section>; }

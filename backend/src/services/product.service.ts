@@ -28,7 +28,7 @@ const productDetailSelect = {
   stockQuantity: true,
   createdAt: true,
   category: { select: { id: true, name: true, slug: true } },
-  seller: { select: { storeName: true, slug: true, description: true } },
+  seller: { select: { id: true, storeName: true, slug: true, description: true } },
   images: { select: { id: true, url: true, altText: true, position: true, variantId: true }, orderBy: { position: "asc" } },
   attributes: { select: { value: true, attribute: { select: { name: true, code: true } } }, orderBy: { attributeId: "asc" } },
   variants: {

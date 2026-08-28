@@ -6,6 +6,7 @@ import { ApiClientError, getProduct } from "@/lib/api";
 import { addCartItem } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 import type { ProductDetail as ProductDetailType } from "@/types/product";
+import { ProductReviews } from "./product-reviews";
 
 const formatPrice = (price: number, currency: string) => new Intl.NumberFormat("en-US", { style: "currency", currency }).format(price);
 
@@ -72,9 +73,10 @@ export function ProductDetail({ id }: { id: string }) {
           <button type="button" disabled={!inStock || isAdding} onClick={() => void addToCart()} className="w-full rounded-md bg-brand-600 px-4 py-3 font-semibold text-white hover:bg-brand-900 disabled:cursor-not-allowed disabled:opacity-60">{isAdding ? "Adding…" : user ? "Add to cart" : "Log in to add to cart"}</button>
           <p className="leading-7 text-slate-700">{product.description}</p>
           {product.attributes.length > 0 && <div><h2 className="text-lg font-semibold">Product details</h2><dl className="mt-3 divide-y divide-slate-200 rounded-lg border border-slate-200">{product.attributes.map((attribute) => <div key={attribute.code} className="grid grid-cols-2 gap-4 px-4 py-3 text-sm"><dt className="font-medium text-slate-600">{attribute.name}</dt><dd>{attribute.value}</dd></div>)}</dl></div>}
-          <div className="rounded-lg bg-slate-50 p-4 text-sm"><p className="font-semibold text-slate-800">Sold by {product.seller.storeName}</p>{product.seller.description && <p className="mt-1 text-slate-600">{product.seller.description}</p>}</div>
+          <div className="rounded-lg bg-slate-50 p-4 text-sm"><p className="font-semibold text-slate-800">Sold by <Link href={`/sellers/${product.seller.id}`} className="text-brand-600 hover:text-brand-900">{product.seller.storeName}</Link></p>{product.seller.description && <p className="mt-1 text-slate-600">{product.seller.description}</p>}</div>
         </div>
       </div>
+      <ProductReviews productId={product.id} />
     </section>
   );
 }

@@ -1,0 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { getSellerOrders } from "@/lib/api";
+
+export function SellerOrders() { const [orders, setOrders] = useState<Array<any>>([]); const [error, setError] = useState<string | null>(null); useEffect(() => { void getSellerOrders().then(({ items }) => setOrders(items)).catch(() => setError("Unable to load seller orders.")); }, []); return <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6"><h1 className="text-3xl font-bold">Seller orders</h1>{error && <p className="mt-5 rounded bg-red-50 p-3 text-red-700">{error}</p>}{orders.length ? <div className="mt-8 space-y-4">{orders.map((order) => <article key={order.id} className="rounded-xl border bg-white p-5 shadow-sm"><div className="flex justify-between"><p className="font-semibold">Order {order.id}</p><span className="capitalize text-slate-600">{order.status.toLowerCase()}</span></div><p className="mt-2 text-sm text-slate-500">{new Date(order.createdAt).toLocaleDateString()}</p><ul className="mt-4 space-y-2 text-sm">{order.items.map((item: any) => <li key={item.id} className="flex justify-between"><span>{item.productName} × {item.quantity}</span><span>${item.totalPrice.toFixed(2)}</span></li>)}</ul></article>)}</div> : !error && <p className="mt-8 text-slate-600">No seller orders yet.</p>}</section>; }

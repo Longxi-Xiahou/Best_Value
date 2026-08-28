@@ -40,6 +40,7 @@ export function Navigation() {
             </button>
             <Link href="/cart" className="text-slate-700 hover:text-brand-600">Cart</Link>
             <Link href="/orders" className="text-slate-700 hover:text-brand-600">Orders</Link>
+            <Link href="/seller" className="text-slate-700 hover:text-brand-600">Sell</Link>
           </> : <>
             <Link href="/login" className="text-slate-700 hover:text-brand-600">Log in</Link>
             <Link href="/register" className="rounded-md bg-brand-600 px-4 py-2 text-white hover:bg-brand-900">Register</Link>

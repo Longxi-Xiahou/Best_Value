@@ -139,6 +139,18 @@ Available authenticated API routes:
 
 Frontend routes: `/cart`, `/checkout`, `/orders`, and `/orders/[id]`.
 
+## Phase 5 marketplace operations
+
+Phase 5 adds the first multi-seller workflows without introducing a separate service or payment provider:
+
+- Seller onboarding at `/sell`, seller dashboard at `/seller`, product management at `/seller/products`, seller order views at `/seller/orders`, and public stores at `/sellers/[id]`.
+- Seller-only authorization middleware verifies the authenticated role, seller profile, and suspension status before product, inventory, and order operations.
+- Seller product APIs support draft/published/archived status, object-storage-ready image URLs, normalized attributes, product variants, and product- or variant-level inventory updates.
+- Customer reviews are available at `GET/POST /api/products/:id/reviews` and can only be created after a purchase; the existing unique constraint prevents duplicate reviews.
+- Admin foundation routes (`GET /api/admin/products` and `PATCH /api/admin/products/:id/status`) provide a small moderation surface for future administration UI.
+
+No new migration was required for Phase 5: the existing `Seller`, `UserRole`, variant/attribute, seller-linked `OrderItem`, and `Review` schema already supported these workflows.
+
 ## Verification
 
 ```bash

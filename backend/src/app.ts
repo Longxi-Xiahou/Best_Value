@@ -12,6 +12,9 @@ import { categoryRouter } from "./routes/category.routes.js";
 import { productRouter } from "./routes/product.routes.js";
 import { cartRouter } from "./routes/cart.routes.js";
 import { orderRouter } from "./routes/order.routes.js";
+import { sellerRouter, protectedSellerRouter } from "./routes/seller.routes.js";
+import { adminRouter } from "./routes/admin.routes.js";
+import { reviewRouter } from "./routes/review.routes.js";
 
 export const app = express();
 
@@ -29,5 +32,9 @@ app.use("/api/categories", categoryRouter);
 app.use("/api/products", productRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/orders", orderRouter);
+app.use("/api/sellers", sellerRouter);
+app.use("/api/seller", protectedSellerRouter);
+app.use("/api/admin", adminRouter);
+app.use("/api", reviewRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);

@@ -51,7 +51,7 @@ export interface ProductDetail {
   hasVariants: boolean;
   createdAt: string;
   category: CategorySummary;
-  seller: { storeName: string; slug: string; description: string | null };
+  seller: { id: string; storeName: string; slug: string; description: string | null };
   images: Array<{ id: string; url: string; altText: string | null; position: number; variantId: string | null }>;
   attributes: ProductAttribute[];
   variants: ProductVariant[];
@@ -117,4 +117,20 @@ export interface OrderDetail extends OrderSummary {
   updatedAt: string;
   shippingAddress: { fullName: string; addressLine1: string; addressLine2?: string; city: string; state?: string; postalCode: string; country: string };
   items: OrderItem[];
+}
+
+export interface Review {
+  id: string;
+  rating: number;
+  title: string | null;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+  author: string;
+}
+
+export interface ReviewResult {
+  averageRating: number;
+  reviewCount: number;
+  items: Review[];
 }
