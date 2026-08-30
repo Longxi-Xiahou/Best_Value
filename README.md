@@ -150,6 +150,12 @@ Phase 6 adds a Stripe test-mode payment foundation around the existing customer 
 
 Configure `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `PLATFORM_FEE_PERCENT` in `backend/.env` with Stripe test credentials only. No Stripe Connect transfers or seller payouts are implemented.
 
+## Phase 7 shipping and fulfillment
+
+Phase 7 uses an internal development shipping catalog (`STANDARD` at $8 and `EXPRESS` at $20). Shipping is calculated server-side and charged once per seller fulfillment, so a two-seller Express order snapshots $40 shipping. The selected method name and final cost are stored on the order and each seller fulfillment.
+
+Orders now create one `Fulfillment` per seller and `FulfillmentItem` rows for that seller's order items. Sellers can move their own fulfillments through `PENDING → PROCESSING → SHIPPED → DELIVERED`, add development carrier/tracking data, and view `/seller/transactions` alongside fulfillment APIs. Customer order details show separate seller shipments. No carrier APIs, labels, or inventory changes are triggered by fulfillment.
+
 ## Phase 5 marketplace operations
 
 Phase 5 adds the first multi-seller workflows without introducing a separate service or payment provider:

@@ -52,6 +52,14 @@ enum RefundStatus {
   CANCELLED
 }
 
+enum FulfillmentStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique @db.VarChar(191)
@@ -82,6 +90,7 @@ model Seller {
   products    Product[]
   orderItems  OrderItem[]
   allocations SellerOrderAllocation[]
+  fulfillments Fulfillment[]
 }
 
 model Category {
@@ -255,12 +264,15 @@ model Order {
   paymentProvider String?     @db.VarChar(50)
   paymentRef      String?     @db.VarChar(191)
   paymentStatus   PaymentStatus @default(PENDING)
+  shippingMethodId String?      @db.VarChar(50)
+  shippingMethodName String?    @db.VarChar(100)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   user            User        @relation(fields: [userId], references: [id], onDelete: Restrict)
   items           OrderItem[]
   payments        Payment[]
   allocations     SellerOrderAllocation[]
+  fulfillments    Fulfillment[]
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
@@ -284,9 +296,47 @@ model OrderItem {
   product     Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
   variant     ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
   seller      Seller          @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+  fulfillmentItems FulfillmentItem[]
 
   @@index([orderId])
   @@index([sellerId, createdAt])
+}
+
+model Fulfillment {
+  id                String            @id @default(cuid())
+  orderId           String
+  sellerId          String
+  status            FulfillmentStatus @default(PENDING)
+  shippingMethodId  String            @db.VarChar(50)
+  shippingMethodName String           @db.VarChar(100)
+  shippingCost      Decimal           @db.Decimal(12, 2)
+  trackingNumber    String?           @db.VarChar(191)
+  carrier           String?           @db.VarChar(100)
+  shippedAt         DateTime?
+  deliveredAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  order             Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  seller            Seller            @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+  items             FulfillmentItem[]
+
+  @@unique([orderId, sellerId])
+  @@index([orderId, status])
+  @@index([sellerId, status])
+}
+
+model FulfillmentItem {
+  id            String      @id @default(cuid())
+  fulfillmentId String
+  orderItemId   String
+  quantity      Int
+  createdAt     DateTime    @default(now())
+  fulfillment   Fulfillment @relation(fields: [fulfillmentId], references: [id], onDelete: Cascade)
+  orderItem     OrderItem   @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  @@unique([fulfillmentId, orderItemId])
+  @@index([fulfillmentId])
+  @@index([orderItemId])
 }
 
 model Payment {

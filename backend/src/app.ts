@@ -18,6 +18,9 @@ import { reviewRouter } from "./routes/review.routes.js";
 import { paymentRouter } from "./routes/payment.routes.js";
 import { paymentAdminRouter } from "./routes/payment-admin.routes.js";
 import { webhook } from "./controllers/payment.controller.js";
+import { shippingRouter } from "./routes/shipping.routes.js";
+import { fulfillmentRouter } from "./routes/fulfillment.routes.js";
+import { fulfillmentAdminRouter } from "./routes/fulfillment-admin.routes.js";
 
 export const app = express();
 
@@ -33,13 +36,16 @@ app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 500, standardHeaders: "draft-
 app.use("/api", healthRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/categories", categoryRouter);
+app.use("/api/shipping", shippingRouter);
 app.use("/api/products", productRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/sellers", sellerRouter);
 app.use("/api/seller", protectedSellerRouter);
+app.use("/api/seller", fulfillmentRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/admin", paymentAdminRouter);
+app.use("/api/admin", fulfillmentAdminRouter);
 app.use("/api", reviewRouter);
 app.use("/api/payments", paymentRouter);
 app.use(notFoundHandler);

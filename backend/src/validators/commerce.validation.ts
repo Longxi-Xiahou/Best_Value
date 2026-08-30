@@ -25,6 +25,6 @@ export const shippingAddressSchema = z.object({
   country: z.string().trim().length(2).transform((value) => value.toUpperCase()),
 });
 
-export const createOrderSchema = z.object({ shippingAddress: shippingAddressSchema });
+export const createOrderSchema = z.object({ shippingAddress: shippingAddressSchema, shippingMethodId: z.enum(["STANDARD", "EXPRESS"]).default("STANDARD") });
 
 export type ShippingAddressInput = z.infer<typeof shippingAddressSchema>;

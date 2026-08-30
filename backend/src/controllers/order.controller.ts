@@ -4,8 +4,8 @@ import { createOrder, getOrder, listOrders } from "../services/order.service.js"
 import { asyncHandler } from "../utils/async-handler.js";
 
 export const create: RequestHandler = asyncHandler(async (request, response) => {
-  const { shippingAddress } = createOrderSchema.parse(request.body);
-  response.status(201).json({ success: true, data: { order: await createOrder(request.auth!.userId, shippingAddress) } });
+  const { shippingAddress, shippingMethodId } = createOrderSchema.parse(request.body);
+  response.status(201).json({ success: true, data: { order: await createOrder(request.auth!.userId, shippingAddress, shippingMethodId) } });
 });
 
 export const list: RequestHandler = asyncHandler(async (request, response) => {

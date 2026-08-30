@@ -71,7 +71,7 @@ export interface ProductListResult {
 
 export interface CartItem {
   id: string;
-  product: { id: string; title: string; image: { url: string; altText: string | null } | null };
+  product: { id: string; title: string; sellerId: string; image: { url: string; altText: string | null } | null };
   variant: { id: string; sku: string; label: string | null } | null;
   quantity: number;
   unitPrice: number;
@@ -104,6 +104,7 @@ export interface OrderSummary {
   id: string;
   status: string;
   paymentStatus: string;
+  shippingMethodName: string | null;
   currency: string;
   subtotal: number;
   shipping: number;
@@ -118,6 +119,7 @@ export interface OrderDetail extends OrderSummary {
   updatedAt: string;
   shippingAddress: { fullName: string; addressLine1: string; addressLine2?: string; city: string; state?: string; postalCode: string; country: string };
   items: OrderItem[];
+  fulfillments: Array<{ id: string; sellerId: string; status: string; shippingMethodId: string; shippingMethodName: string; shippingCost: number; trackingNumber: string | null; carrier: string | null; shippedAt: string | null; deliveredAt: string | null; seller: { id: string; storeName: string; slug: string }; items: Array<{ id: string; orderItemId: string; quantity: number }> }>;
 }
 
 export interface Review {

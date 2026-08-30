@@ -83,7 +83,8 @@ export const addCartItem = (input: { productId: string; variantId?: string; quan
 export const updateCartItem = (id: string, quantity: number) => apiFetch<Cart>(`/cart/items/${id}`, { method: "PATCH", body: JSON.stringify({ quantity }) });
 export const removeCartItem = (id: string) => apiFetch<Cart>(`/cart/items/${id}`, { method: "DELETE" });
 export const clearCart = () => apiFetch<Cart>("/cart", { method: "DELETE" });
-export const createOrder = (shippingAddress: { fullName: string; addressLine1: string; addressLine2?: string; city: string; state?: string; postalCode: string; country: string }) => apiFetch<{ order: OrderDetail }>("/orders", { method: "POST", body: JSON.stringify({ shippingAddress }) });
+export const getShippingMethods = () => apiFetch<{ items: Array<{ id: string; name: string; estimatedDelivery: string; price: number }> }>("/shipping/methods");
+export const createOrder = (shippingAddress: { fullName: string; addressLine1: string; addressLine2?: string; city: string; state?: string; postalCode: string; country: string }, shippingMethodId = "STANDARD") => apiFetch<{ order: OrderDetail }>("/orders", { method: "POST", body: JSON.stringify({ shippingAddress, shippingMethodId }) });
 export const getOrders = () => apiFetch<{ items: OrderSummary[] }>("/orders");
 export const getOrder = (id: string) => apiFetch<{ order: OrderDetail }>(`/orders/${id}`);
 export const createCheckoutSession = (orderId: string) => apiFetch<{ payment: { id: string; provider: string; status: string; amount: number; currency: string; createdAt: string }; checkoutUrl: string | null }>("/payments/create-checkout-session", { method: "POST", body: JSON.stringify({ orderId }) });

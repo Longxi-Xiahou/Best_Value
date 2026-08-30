@@ -7,7 +7,7 @@ const cartItemSelect = {
   quantity: true,
   product: {
     select: {
-      id: true, title: true, basePrice: true, currency: true, stockQuantity: true,
+      id: true, title: true, sellerId: true, basePrice: true, currency: true, stockQuantity: true,
       images: { select: { url: true, altText: true }, orderBy: { position: "asc" }, take: 1 },
       variants: { select: { id: true } },
     },
@@ -31,7 +31,7 @@ const mapCartItem = (item: CartItemRow) => {
   const unitPrice = getUnitPrice(item);
   return {
     id: item.id,
-    product: { id: item.product.id, title: item.product.title, image: item.product.images[0] ?? null },
+    product: { id: item.product.id, title: item.product.title, sellerId: item.product.sellerId, image: item.product.images[0] ?? null },
     variant: item.variant ? { id: item.variant.id, sku: item.variant.sku, label: variantLabel(item) } : null,
     quantity: item.quantity,
     unitPrice,
