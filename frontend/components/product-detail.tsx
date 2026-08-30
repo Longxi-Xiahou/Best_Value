@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ApiClientError, getProduct } from "@/lib/api";
+import { ApiClientError, getProduct, getRelatedProducts } from "@/lib/api";
 import { addCartItem } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
-import type { ProductDetail as ProductDetailType } from "@/types/product";
+import type { ProductDetail as ProductDetailType, ProductSummary } from "@/types/product";
 import { ProductReviews } from "./product-reviews";
+import { ProductCard } from "./product-card";
 
 const formatPrice = (price: number, currency: string) => new Intl.NumberFormat("en-US", { style: "currency", currency }).format(price);
 
@@ -19,6 +20,7 @@ export function ProductDetail({ id }: { id: string }) {
   const [selectedVariantId, setSelectedVariantId] = useState("");
   const [addError, setAddError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [related, setRelated] = useState<ProductSummary[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -36,6 +38,7 @@ export function ProductDetail({ id }: { id: string }) {
         setError(requestError instanceof ApiClientError && requestError.status === 404 ? "Product not found." : requestError instanceof ApiClientError ? requestError.message : "Unable to load this product.");
       })
       .finally(() => { if (active) setIsLoading(false); });
+    void getRelatedProducts(id).then(({ items }) => { if (active) setRelated(items); }).catch(() => { if (active) setRelated([]); });
     return () => { active = false; };
   }, [id]);
 
@@ -77,6 +80,7 @@ export function ProductDetail({ id }: { id: string }) {
         </div>
       </div>
       <ProductReviews productId={product.id} />
+      {related.length > 0 && <section className="mt-12"><h2 className="text-2xl font-bold">You may also like</h2><div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{related.map((item) => <ProductCard key={item.id} product={item} />)}</div></section>}
     </section>
   );
 }

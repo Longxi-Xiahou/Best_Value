@@ -75,6 +75,7 @@ model User {
   orders       Order[]
   reviews      Review[]
   wishlist     Wishlist[]
+  searchEvents SearchEvent[]
 }
 
 model Seller {
@@ -423,4 +424,15 @@ model Wishlist {
 
   @@unique([userId, productId])
   @@index([productId])
+}
+
+model SearchEvent {
+  id        String   @id @default(cuid())
+  query     String   @db.VarChar(100)
+  userId    String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([query, createdAt])
+  @@index([userId, createdAt])
 }

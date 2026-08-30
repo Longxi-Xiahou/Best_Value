@@ -58,11 +58,15 @@ export interface ProductQuery {
   page?: number;
   limit?: number;
   search?: string;
+  q?: string;
   category?: string;
   categoryId?: string;
+  seller?: string;
+  brand?: string;
+  attributes?: string;
   minPrice?: string;
   maxPrice?: string;
-  sort?: "relevance" | "price" | "newest";
+  sort?: "relevance" | "price" | "newest" | "oldest" | "popular" | "price_asc" | "price_desc";
   order?: "asc" | "desc";
 }
 
@@ -74,6 +78,9 @@ const toQueryString = (query: ProductQuery) => {
 };
 
 export const getProducts = (query: ProductQuery = {}) => apiFetch<ProductListResult>(`/products${toQueryString(query)}`);
+export const getSearchSuggestions = (q: string) => apiFetch<{ items: string[] }>(`/search/suggestions?q=${encodeURIComponent(q)}`);
+export const getRelatedProducts = (id: string) => apiFetch<{ items: ProductSummary[] }>(`/products/${id}/related`);
+export const getTrendingProducts = () => apiFetch<{ items: ProductSummary[] }>("/products/trending");
 export const getProduct = (id: string) => apiFetch<{ product: ProductDetail }>(`/products/${id}`);
 export const getCategories = () => apiFetch<{ items: Category[] }>("/categories");
 export const getCategory = (slug: string) => apiFetch<{ category: Category }>(`/categories/${slug}`);

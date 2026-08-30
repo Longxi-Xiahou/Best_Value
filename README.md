@@ -156,6 +156,12 @@ Phase 7 uses an internal development shipping catalog (`STANDARD` at $8 and `EXP
 
 Orders now create one `Fulfillment` per seller and `FulfillmentItem` rows for that seller's order items. Sellers can move their own fulfillments through `PENDING → PROCESSING → SHIPPED → DELIVERED`, add development carrier/tracking data, and view `/seller/transactions` alongside fulfillment APIs. Customer order details show separate seller shipments. No carrier APIs, labels, or inventory changes are triggered by fulfillment.
 
+## Phase 8 search and discovery
+
+The public catalog endpoint is the unified MySQL search API. It accepts `q` (or the legacy `search`), `category`/`categoryId` with descendants, seller ID or slug, comma-separated brands, `attributes=code:value,...`, `minPrice`, `maxPrice`, `sort`, `page`, and `pageSize` (maximum 50). Relevance is deterministic: exact/prefix/contains title matches rank highest, followed by brand, category, attribute, and description matches; ties use creation time and ID.
+
+Search results remain database-filtered and active-only. `GET /api/search/suggestions` provides bounded public title/brand/category suggestions, `GET /api/products/:id/related` ranks same-category/brand/shared-attribute products, and `GET /api/products/trending` uses actual historical `OrderItem` quantities only (it returns no fabricated popularity). `SearchEvent` stores normalized, capped query text and an optional user ID for future analytics.
+
 ## Phase 5 marketplace operations
 
 Phase 5 adds the first multi-seller workflows without introducing a separate service or payment provider:

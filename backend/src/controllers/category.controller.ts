@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 import { getCategoryBySlug, listCategories } from "../services/category.service.js";
-import { listProducts } from "../services/product.service.js";
+import { listProducts } from "../services/search.service.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { categoryParamsSchema, listProductsQuerySchema } from "../validators/catalog.validation.js";
 

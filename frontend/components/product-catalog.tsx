@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ApiClientError, getCategories, getProducts, type ProductQuery } from "@/lib/api";
+import { ApiClientError, getCategories, getProducts, getSearchSuggestions, type ProductQuery } from "@/lib/api";
 import type { Category, ProductListResult } from "@/types/product";
 import { CategoryNavigation } from "./category-navigation";
 import { ProductCard } from "./product-card";
@@ -29,16 +29,21 @@ export function ProductCatalog({ title = "Browse products", initialCategory }: P
   const [searchInput, setSearchInput] = useState("");
   const [minPriceInput, setMinPriceInput] = useState("");
   const [maxPriceInput, setMaxPriceInput] = useState("");
+  const [brandInput, setBrandInput] = useState("");
+  const [sellerInput, setSellerInput] = useState("");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
   const currentQuery = useMemo(() => {
     const params = new URLSearchParams(queryString);
     return {
       page: parsePositiveInt(params.get("page"), 1),
       limit: 12,
-      search: params.get("search") ?? "",
+      search: params.get("q") ?? params.get("search") ?? "",
       category: initialCategory ?? params.get("category") ?? "",
       minPrice: params.get("minPrice") ?? "",
       maxPrice: params.get("maxPrice") ?? "",
+      brand: params.get("brand") ?? "",
+      seller: params.get("seller") ?? "",
       sort: params.get("sort") ?? "relevance",
       order: params.get("order") ?? "",
     };
@@ -48,7 +53,11 @@ export function ProductCatalog({ title = "Browse products", initialCategory }: P
     setSearchInput(currentQuery.search);
     setMinPriceInput(currentQuery.minPrice);
     setMaxPriceInput(currentQuery.maxPrice);
-  }, [currentQuery.maxPrice, currentQuery.minPrice, currentQuery.search]);
+    setBrandInput(currentQuery.brand);
+    setSellerInput(currentQuery.seller);
+  }, [currentQuery.brand, currentQuery.maxPrice, currentQuery.minPrice, currentQuery.search, currentQuery.seller]);
+
+  useEffect(() => { if (searchInput.trim().length < 2) { setSuggestions([]); return; } const timer = window.setTimeout(() => { void getSearchSuggestions(searchInput.trim()).then(({ items }) => setSuggestions(items)).catch(() => setSuggestions([])); }, 200); return () => window.clearTimeout(timer); }, [searchInput]);
 
   useEffect(() => {
     let active = true;
@@ -62,7 +71,7 @@ export function ProductCatalog({ title = "Browse products", initialCategory }: P
     setError(null);
     const query: ProductQuery = {
       page: currentQuery.page, limit: currentQuery.limit, search: currentQuery.search || undefined,
-      category: currentQuery.category || undefined, minPrice: currentQuery.minPrice || undefined, maxPrice: currentQuery.maxPrice || undefined,
+      category: currentQuery.category || undefined, minPrice: currentQuery.minPrice || undefined, maxPrice: currentQuery.maxPrice || undefined, brand: currentQuery.brand || undefined, seller: currentQuery.seller || undefined,
       sort: currentQuery.sort as ProductQuery["sort"], order: currentQuery.order as ProductQuery["order"],
     };
     void getProducts(query)
@@ -90,7 +99,7 @@ export function ProductCatalog({ title = "Browse products", initialCategory }: P
 
   const submitFilters = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    updateQuery({ search: searchInput.trim() || undefined, minPrice: minPriceInput || undefined, maxPrice: maxPriceInput || undefined, page: 1 });
+    updateQuery({ search: searchInput.trim() || undefined, minPrice: minPriceInput || undefined, maxPrice: maxPriceInput || undefined, brand: brandInput.trim() || undefined, seller: sellerInput.trim() || undefined, page: 1 });
   };
 
   const sortValue = currentQuery.sort === "price" ? `price-${currentQuery.order || "asc"}` : currentQuery.sort;
@@ -108,9 +117,11 @@ export function ProductCatalog({ title = "Browse products", initialCategory }: P
       </div>
       <div className="mt-7"><CategoryNavigation categories={categories} /></div>
       <form onSubmit={submitFilters} className="mt-8 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-[1fr_150px_150px_180px_auto]">
-        <label className="sr-only" htmlFor="product-search">Search products</label><input id="product-search" value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="Search products" className="rounded-md border border-slate-300 px-3 py-2" />
+        <div className="relative"><label className="sr-only" htmlFor="product-search">Search products</label><input id="product-search" value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="Search products" className="w-full rounded-md border border-slate-300 px-3 py-2" />{suggestions.length > 0 && <ul className="absolute z-10 mt-1 w-full rounded-md border border-slate-200 bg-white py-1 shadow-lg">{suggestions.map((suggestion) => <li key={suggestion}><button type="button" onClick={() => { setSearchInput(suggestion); setSuggestions([]); }} className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50">{suggestion}</button></li>)}</ul>}</div>
         <input aria-label="Minimum price" type="number" min="0" step="0.01" value={minPriceInput} onChange={(event) => setMinPriceInput(event.target.value)} placeholder="Min price" className="rounded-md border border-slate-300 px-3 py-2" />
         <input aria-label="Maximum price" type="number" min="0" step="0.01" value={maxPriceInput} onChange={(event) => setMaxPriceInput(event.target.value)} placeholder="Max price" className="rounded-md border border-slate-300 px-3 py-2" />
+        <input aria-label="Brand" value={brandInput} onChange={(event) => setBrandInput(event.target.value)} placeholder="Brand" className="rounded-md border border-slate-300 px-3 py-2" />
+        <input aria-label="Seller ID or slug" value={sellerInput} onChange={(event) => setSellerInput(event.target.value)} placeholder="Seller" className="rounded-md border border-slate-300 px-3 py-2" />
         <select aria-label="Sort products" value={sortValue} onChange={(event) => updateSort(event.target.value)} className="rounded-md border border-slate-300 px-3 py-2"><option value="relevance">Latest</option><option value="newest">Newest</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option></select>
         <button className="rounded-md bg-brand-600 px-5 py-2 font-semibold text-white hover:bg-brand-900">Apply</button>
       </form>
