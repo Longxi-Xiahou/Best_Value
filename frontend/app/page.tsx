@@ -6,6 +6,7 @@ import { CategoryNavigation } from "@/components/category-navigation";
 import { ProductCard } from "@/components/product-card";
 import { getCategories, getProducts } from "@/lib/api";
 import type { Category, ProductSummary } from "@/types/product";
+import { RecommendationStrip } from "@/components/recommendation-strip";
 
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -31,6 +32,7 @@ export default function HomePage() {
         <CategoryNavigation categories={categories} />
         <div className="flex items-end justify-between"><div><h2 className="text-2xl font-bold">Fresh in the catalog</h2><p className="mt-1 text-slate-600">Explore new products from across the marketplace.</p></div><Link href="/products" className="text-sm font-semibold text-brand-600 hover:text-brand-900">View all</Link></div>
         {products.length ? <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{products.map((product) => <ProductCard key={product.id} product={product} />)}</div> : <p className="text-slate-600">Catalog products will appear here once available.</p>}
+        <RecommendationStrip />
       </section>
     </div>
   );

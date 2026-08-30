@@ -162,6 +162,10 @@ The public catalog endpoint is the unified MySQL search API. It accepts `q` (or 
 
 Search results remain database-filtered and active-only. `GET /api/search/suggestions` provides bounded public title/brand/category suggestions, `GET /api/products/:id/related` ranks same-category/brand/shared-attribute products, and `GET /api/products/trending` uses actual historical `OrderItem` quantities only (it returns no fabricated popularity). `SearchEvent` stores normalized, capped query text and an optional user ID for future analytics.
 
+## Phase 9 recommendations and personalization
+
+Authenticated product detail visits record one throttled `VIEW` interaction per product per 15 minutes, and successful cart additions record `ADD_TO_CART` interactions. `GET /api/recommendations/recent` returns the user’s own deduplicated active history; `GET /api/recommendations?limit=...` generates bounded deterministic recommendations from recent views, cart signals, purchases, categories, brands, and attributes. Purchased and currently-carted products are excluded, seller diversity is capped, and cold-start users receive actual trending products. No interaction history or user ID is accepted from the client, and no ML, embeddings, Redis, or external recommendation engine is used.
+
 ## Phase 5 marketplace operations
 
 Phase 5 adds the first multi-seller workflows without introducing a separate service or payment provider:

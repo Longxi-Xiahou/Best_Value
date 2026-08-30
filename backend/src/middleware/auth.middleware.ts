@@ -12,3 +12,10 @@ export const requireAuth: RequestHandler = (request, _response, next) => {
   request.auth = payload;
   return next();
 };
+
+export const optionalAuth: RequestHandler = (request, _response, next) => {
+  const token = request.cookies?.[AUTH_COOKIE_NAME];
+  const payload = typeof token === "string" ? getSessionPayload(token) : null;
+  if (payload) request.auth = payload;
+  next();
+};

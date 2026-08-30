@@ -81,6 +81,8 @@ export const getProducts = (query: ProductQuery = {}) => apiFetch<ProductListRes
 export const getSearchSuggestions = (q: string) => apiFetch<{ items: string[] }>(`/search/suggestions?q=${encodeURIComponent(q)}`);
 export const getRelatedProducts = (id: string) => apiFetch<{ items: ProductSummary[] }>(`/products/${id}/related`);
 export const getTrendingProducts = () => apiFetch<{ items: ProductSummary[] }>("/products/trending");
+export const getRecommendations = (limit = 8) => apiFetch<{ personalized: boolean; items: Array<ProductSummary & { reason?: string }> }>(`/recommendations?limit=${limit}`);
+export const getRecentlyViewed = () => apiFetch<{ items: Array<ProductSummary & { reason?: string }> }>("/recommendations/recent");
 export const getProduct = (id: string) => apiFetch<{ product: ProductDetail }>(`/products/${id}`);
 export const getCategories = () => apiFetch<{ items: Category[] }>("/categories");
 export const getCategory = (slug: string) => apiFetch<{ category: Category }>(`/categories/${slug}`);

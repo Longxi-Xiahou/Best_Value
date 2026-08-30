@@ -60,6 +60,11 @@ enum FulfillmentStatus {
   CANCELLED
 }
 
+enum ProductInteractionType {
+  VIEW
+  ADD_TO_CART
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique @db.VarChar(191)
@@ -76,6 +81,7 @@ model User {
   reviews      Review[]
   wishlist     Wishlist[]
   searchEvents SearchEvent[]
+  interactions ProductInteraction[]
 }
 
 model Seller {
@@ -132,6 +138,7 @@ model Product {
   orderItems    OrderItem[]
   reviews       Review[]
   wishlists     Wishlist[]
+  interactions  ProductInteraction[]
 
   @@index([categoryId, status])
   @@index([sellerId, status])
@@ -435,4 +442,18 @@ model SearchEvent {
 
   @@index([query, createdAt])
   @@index([userId, createdAt])
+}
+
+model ProductInteraction {
+  id        String                 @id @default(cuid())
+  userId    String
+  productId String
+  type      ProductInteractionType
+  createdAt DateTime               @default(now())
+  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, type, createdAt])
+  @@index([productId, createdAt])
 }

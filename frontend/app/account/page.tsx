@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth-provider";
+import { RecommendationStrip } from "@/components/recommendation-strip";
 
 export default function AccountPage() {
   const { user, isLoading, error } = useAuth();
@@ -28,6 +29,7 @@ export default function AccountPage() {
         <div className="grid gap-1 px-6 py-5 sm:grid-cols-3"><dt className="text-sm font-medium text-slate-500">Account type</dt><dd className="text-slate-900 sm:col-span-2">{user.role.toLowerCase()}</dd></div>
       </dl>
       <Link href="/" className="mt-8 inline-flex font-semibold text-brand-600 hover:text-brand-900">← Continue browsing</Link>
+      <RecommendationStrip mode="recent" />
     </section>
   );
 }

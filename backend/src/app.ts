@@ -22,6 +22,7 @@ import { shippingRouter } from "./routes/shipping.routes.js";
 import { fulfillmentRouter } from "./routes/fulfillment.routes.js";
 import { fulfillmentAdminRouter } from "./routes/fulfillment-admin.routes.js";
 import { searchRouter } from "./routes/search.routes.js";
+import { recommendationRouter } from "./routes/recommendation.routes.js";
 
 export const app = express();
 
@@ -39,6 +40,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/categories", categoryRouter);
 app.use("/api/shipping", shippingRouter);
 app.use("/api/search", searchRouter);
+app.use("/api/recommendations", recommendationRouter);
 app.use("/api/products", productRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/orders", orderRouter);
