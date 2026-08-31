@@ -21,6 +21,8 @@ export interface ProductSummary {
   image: { url: string; altText: string | null } | null;
   inStock: boolean;
   hasVariants: boolean;
+  averageRating?: number;
+  reviewCount?: number;
 }
 
 export interface ProductAttribute {
@@ -55,6 +57,7 @@ export interface ProductDetail {
   images: Array<{ id: string; url: string; altText: string | null; position: number; variantId: string | null }>;
   attributes: ProductAttribute[];
   variants: ProductVariant[];
+  reviewStats: { averageRating: number; reviewCount: number; distribution: Record<1 | 2 | 3 | 4 | 5, number> };
 }
 
 export interface Pagination {
@@ -130,10 +133,13 @@ export interface Review {
   createdAt: string;
   updatedAt: string;
   author: string;
+  verifiedPurchase: boolean;
 }
 
 export interface ReviewResult {
   averageRating: number;
   reviewCount: number;
+  distribution: Record<1 | 2 | 3 | 4 | 5, number>;
   items: Review[];
+  pagination: { page: number; pageSize: number; total: number; totalPages: number };
 }

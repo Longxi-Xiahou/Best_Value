@@ -10,6 +10,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
       <div className="space-y-2 p-4">
         <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{product.category.name}</p>
         <h2 className="line-clamp-2 font-semibold text-slate-900"><Link href={`/products/${product.id}`}>{product.title}</Link></h2>
+        {product.reviewCount ? <p className="text-sm text-amber-700">★ {product.averageRating?.toFixed(1)} <span className="text-slate-500">({product.reviewCount})</span></p> : <p className="text-sm text-slate-500">No reviews yet</p>}
         <p className="font-bold text-brand-900">{new Intl.NumberFormat("en-US", { style: "currency", currency: product.currency }).format(product.price)}</p>
         <p className={`text-sm font-medium ${product.inStock ? "text-emerald-700" : "text-slate-500"}`}>{product.inStock ? "In stock" : "Currently unavailable"}{product.hasVariants ? " · Options available" : ""}</p>
       </div>

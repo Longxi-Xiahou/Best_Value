@@ -3,6 +3,7 @@ import { prisma } from "../config/prisma.js";
 import type { ListProductsQuery } from "../validators/catalog.validation.js";
 import { ApiError } from "../utils/api-error.js";
 import { getCategoryAndDescendantIds } from "./category.service.js";
+import { getReviewStatistics } from "./review.service.js";
 
 const productListSelect = {
   id: true,
@@ -46,7 +47,7 @@ type ProductDetailRow = Prisma.ProductGetPayload<{ select: typeof productDetailS
 const isAvailable = (product: Pick<ProductListRow, "stockQuantity" | "variants">) =>
   product.variants.length > 0 ? product.variants.some((variant) => variant.stockQuantity > 0) : product.stockQuantity > 0;
 
-const mapListProduct = (product: ProductListRow) => ({
+const mapListProduct = (product: ProductListRow, rating?: { averageRating: number; reviewCount: number }) => ({
   id: product.id,
   title: product.title,
   slug: product.slug,
@@ -57,6 +58,7 @@ const mapListProduct = (product: ProductListRow) => ({
   image: product.images[0] ?? null,
   inStock: isAvailable(product),
   hasVariants: product.variants.length > 0,
+  ...(rating ?? { averageRating: 0, reviewCount: 0 }),
 });
 
 const mapDetailProduct = (product: ProductDetailRow) => ({
@@ -124,8 +126,10 @@ export const listProducts = async (query: ListProductsQuery) => {
     prisma.product.count({ where }),
   ]);
 
+  const ratingRows = await prisma.review.groupBy({ by: ["productId"], where: { productId: { in: items.map((item) => item.id) }, status: "PUBLISHED" }, _avg: { rating: true }, _count: { _all: true } });
+  const ratings = new Map(ratingRows.map((row) => [row.productId, { averageRating: row._avg.rating == null ? 0 : Math.round(row._avg.rating * 10) / 10, reviewCount: row._count._all }]));
   return {
-    items: items.map(mapListProduct),
+    items: items.map((item) => mapListProduct(item, ratings.get(item.id))),
     pagination: { page: query.page, limit: query.limit, total, totalPages: Math.ceil(total / query.limit) },
   };
 };
@@ -133,5 +137,5 @@ export const listProducts = async (query: ListProductsQuery) => {
 export const getProductById = async (id: string) => {
   const product = await prisma.product.findFirst({ where: { id, status: ProductStatus.ACTIVE }, select: productDetailSelect });
   if (!product) throw new ApiError(404, "Product not found", "PRODUCT_NOT_FOUND");
-  return mapDetailProduct(product);
+  return { ...mapDetailProduct(product), reviewStats: await getReviewStatistics(id) };
 };

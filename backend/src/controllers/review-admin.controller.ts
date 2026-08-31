@@ -1,0 +1,10 @@
+import type { RequestHandler } from "express";
+import { ReviewReportStatus, ReviewStatus } from "@prisma/client";
+import { asyncHandler } from "../utils/async-handler.js";
+import { adminReviewListQuerySchema, moderateReviewSchema, resolveReportSchema, reviewParamsSchema, reviewReportListQuerySchema } from "../validators/review.validation.js";
+import { listAdminReviews, listReviewReports, moderateReview, resolveReviewReport } from "../services/review.service.js";
+
+export const listReviews: RequestHandler = asyncHandler(async (request, response) => { const query = adminReviewListQuerySchema.parse(request.query); response.json({ success: true, data: await listAdminReviews({ ...query, status: query.status as ReviewStatus | undefined }) }); });
+export const moderate: RequestHandler = asyncHandler(async (request, response) => { const { id } = reviewParamsSchema.parse(request.params); const input = moderateReviewSchema.parse(request.body); response.json({ success: true, data: { review: await moderateReview(request.auth!.userId, id, input.action, input.reason) } }); });
+export const listReports: RequestHandler = asyncHandler(async (request, response) => { const query = reviewReportListQuerySchema.parse(request.query); response.json({ success: true, data: await listReviewReports({ ...query, status: query.status as ReviewReportStatus | undefined }) }); });
+export const resolveReport: RequestHandler = asyncHandler(async (request, response) => { const { id } = reviewParamsSchema.parse(request.params); const input = resolveReportSchema.parse(request.body); response.json({ success: true, data: { report: await resolveReviewReport(request.auth!.userId, id, input.status as ReviewReportStatus) } }); });

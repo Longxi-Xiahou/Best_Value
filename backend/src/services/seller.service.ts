@@ -5,6 +5,18 @@ import type { SellerProductCreateInput } from "../validators/seller.validation.j
 
 const publicSellerSelect = { id: true, storeName: true, slug: true, description: true, status: true, createdAt: true } satisfies Prisma.SellerSelect;
 
+export const getSellerReputation = async (sellerId: string) => {
+  const where: Prisma.ReviewWhereInput = { status: "PUBLISHED", product: { sellerId } };
+  const [aggregate, grouped, reviewedProducts] = await Promise.all([
+    prisma.review.aggregate({ where, _avg: { rating: true }, _count: { _all: true } }),
+    prisma.review.groupBy({ by: ["rating"], where, _count: { _all: true } }),
+    prisma.review.groupBy({ by: ["productId"], where }),
+  ]);
+  const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  grouped.forEach((row) => { distribution[row.rating as 1 | 2 | 3 | 4 | 5] = row._count._all; });
+  return { averageRating: aggregate._avg.rating == null ? 0 : Math.round(aggregate._avg.rating * 10) / 10, reviewCount: aggregate._count._all, reviewedProductCount: reviewedProducts.length, distribution };
+};
+
 const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 170) || "store";
 
 const uniqueSlug = async (storeName: string, currentId?: string) => {
@@ -32,18 +44,20 @@ export const onboardSeller = async (userId: string, storeName: string, descripti
 export const getPublicSeller = async (identifier: string) => {
   const seller = await prisma.seller.findFirst({ where: { OR: [{ id: identifier }, { slug: identifier }], status: { not: SellerStatus.SUSPENDED } }, select: { ...publicSellerSelect, products: { where: { status: "ACTIVE" }, select: { id: true, title: true, slug: true, basePrice: true, currency: true, stockQuantity: true, images: { select: { url: true, altText: true }, orderBy: { position: "asc" }, take: 1 }, category: { select: { id: true, name: true, slug: true } } }, orderBy: { createdAt: "desc" } } } });
   if (!seller) throw new ApiError(404, "Seller not found", "SELLER_NOT_FOUND");
-  return { ...seller, products: seller.products.map((product) => ({ ...product, price: Number(product.basePrice), image: product.images[0] ?? null, images: undefined })) };
+  const reputation = await getSellerReputation(seller.id);
+  return { ...seller, reputation, products: seller.products.map((product) => ({ ...product, price: Number(product.basePrice), image: product.images[0] ?? null, images: undefined })) };
 };
 
 export const getSellerDashboard = async (sellerId: string) => {
-  const [totalProducts, activeProducts, lowStockProducts, lowStockVariants, recentOrders] = await prisma.$transaction([
+  const [totalProducts, activeProducts, lowStockProducts, lowStockVariants, recentOrders, reputation] = await prisma.$transaction([
     prisma.product.count({ where: { sellerId } }),
     prisma.product.count({ where: { sellerId, status: "ACTIVE" } }),
     prisma.product.findMany({ where: { sellerId, stockQuantity: { lte: 5 }, variants: { none: {} } }, select: { id: true, title: true, stockQuantity: true }, orderBy: { stockQuantity: "asc" }, take: 10 }),
     prisma.productVariant.findMany({ where: { product: { sellerId }, stockQuantity: { lte: 5 } }, select: { id: true, sku: true, stockQuantity: true, product: { select: { id: true, title: true } } }, orderBy: { stockQuantity: "asc" }, take: 10 }),
     prisma.orderItem.findMany({ where: { sellerId }, select: { orderId: true, productName: true, quantity: true, totalPrice: true, order: { select: { status: true, createdAt: true } } }, orderBy: { createdAt: "desc" }, take: 10 }),
+    prisma.review.aggregate({ where: { status: "PUBLISHED", product: { sellerId } }, _avg: { rating: true }, _count: { _all: true } }),
   ]);
-  return { totalProducts, activeProducts, lowStockProducts, lowStockVariants, recentOrders: recentOrders.map((item) => ({ ...item, totalPrice: Number(item.totalPrice) })) };
+  return { totalProducts, activeProducts, lowStockProducts, lowStockVariants, reputation: { averageRating: reputation._avg.rating == null ? 0 : Math.round(reputation._avg.rating * 10) / 10, reviewCount: reputation._count._all }, recentOrders: recentOrders.map((item) => ({ ...item, totalPrice: Number(item.totalPrice) })) };
 };
 
 export const assertSellerOwnsProduct = async (sellerId: string, productId: string) => {
