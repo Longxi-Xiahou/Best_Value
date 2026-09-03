@@ -3,7 +3,6 @@ import cookieParser from "cookie-parser";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-import morgan from "morgan";
 import { env } from "./config/env.js";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler.js";
 import { healthRouter } from "./routes/health.routes.js";
@@ -23,16 +22,20 @@ import { fulfillmentRouter } from "./routes/fulfillment.routes.js";
 import { fulfillmentAdminRouter } from "./routes/fulfillment-admin.routes.js";
 import { searchRouter } from "./routes/search.routes.js";
 import { recommendationRouter } from "./routes/recommendation.routes.js";
+import { requestContext, requestLogger } from "./middleware/request-context.js";
+import { webhookLimiter } from "./middleware/rate-limiters.js";
 
 export const app = express();
 
 app.disable("x-powered-by");
-app.use(helmet());
-app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
+app.use(requestContext);
+app.use(requestLogger);
+app.use(helmet({ contentSecurityPolicy: { directives: { defaultSrc: ["'none'"], frameAncestors: ["'none'"], baseUri: ["'none'"] } }, hsts: env.NODE_ENV === "production" }));
+const allowedOrigins = new Set([env.FRONTEND_URL, ...env.FRONTEND_URLS]);
+app.use(cors({ origin: (origin, callback) => { if (!origin || allowedOrigins.has(origin)) return callback(null, true); return callback(new Error("Origin is not allowed")); }, credentials: true }));
 app.use(cookieParser());
-app.post("/api/payments/webhook", express.raw({ type: "application/json" }), webhook);
+app.post("/api/payments/webhook", webhookLimiter, express.raw({ type: "application/json" }), webhook);
 app.use(express.json({ limit: "1mb" }));
-app.use(morgan(env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 500, standardHeaders: "draft-8", legacyHeaders: false }));
 
 app.use("/api", healthRouter);

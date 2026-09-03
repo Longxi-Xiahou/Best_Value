@@ -187,3 +187,23 @@ curl http://localhost:4000/api/health
 ```
 
 `npm run db:migrate` needs a reachable MySQL instance; no database connection is needed for the health endpoint itself.
+
+## Production readiness checklist
+
+- Set a unique `JWT_SECRET` (32+ characters), a production `DATABASE_URL`, `NODE_ENV=production`, and an explicit HTTPS `FRONTEND_URL` (additional exact origins may be listed in `FRONTEND_URLS`). Never commit `.env` files.
+- Run `npm run db:generate` and `npx prisma migrate deploy --schema backend/prisma/schema.prisma` against `best_value` before starting the API. Take verified database backups and test restore procedures.
+- Deploy the backend and frontend at their final HTTPS URLs, then confirm CORS allows only those exact frontend origins. Cookies are HTTP-only, Secure in production, and SameSite=Lax; this assumes the UI and API are same-site deployments. Add a CSRF token/origin strategy if that topology changes.
+- Configure Stripe test or live credentials only on the backend. Register the webhook endpoint with the matching signing secret and never place Stripe secrets in `NEXT_PUBLIC_*` variables.
+- Bootstrap the first administrator by assigning `User.role=ADMIN` through a controlled database/migration procedure; never accept a role from the browser. Review admin audit logs regularly.
+- Retain structured request/error logs without passwords, cookies, tokens, connection strings, or unnecessary personal data. Configure external log retention and alerting separately.
+- Use TLS termination, network restrictions for MySQL, least-privilege database credentials, automated backups, dependency scanning (`npm audit`), and a deploy order of migration → backend → frontend.
+
+## Phase 12 hardening notes
+
+The API now fails closed for missing `DATABASE_URL`, short `JWT_SECRET` values, localhost production origins, and incomplete Stripe credential pairs. `FRONTEND_URLS` supports additional explicit comma-separated origins; credentialed wildcard CORS is never enabled.
+
+Authentication remains an HTTP-only, Secure-in-production, SameSite=Lax cookie scoped to `/api`. This assumes the frontend and API are same-site; use a CSRF token/origin policy if the deployment becomes cross-site. Tokens are never stored in local storage or returned by APIs.
+
+Structured JSON request/error logs include a request ID and exclude cookies, authorization headers, passwords, connection strings, and payment secrets. Helmet security headers, production HSTS, bounded JSON bodies, endpoint-specific rate limits, and HTTP(S)-only image URL validation are enabled.
+
+Run `npm audit` before deployment and review advisories without blindly applying major upgrades. The current audit reports transitive Prisma, Express/qs, PostCSS, Next.js, and sharp advisories; a safe fix may require a major Next.js upgrade and should be evaluated separately. Deploy in this order: `prisma migrate deploy` against `best_value`, backend with production secrets, CORS/HTTPS verification, then frontend. Configure MySQL network restrictions, least-privilege credentials, backups/restore tests, and log retention with the hosting provider.

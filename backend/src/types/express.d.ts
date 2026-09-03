@@ -5,6 +5,7 @@ declare global {
     interface Request {
       auth?: AuthTokenPayload;
       seller?: { id: string; status: "PENDING" | "ACTIVE" | "SUSPENDED" };
+      requestId: string;
     }
   }
 }
