@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ApiClientError, getAdminReviewReports, moderateAdminReview, resolveAdminReviewReport } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
+import { AdminNav } from "@/components/admin-console";
 
 export default function AdminReviewsPage() {
   const { user, isLoading } = useAuth(); const [reports, setReports] = useState<Awaited<ReturnType<typeof getAdminReviewReports>>["items"]>([]); const [error, setError] = useState<string | null>(null);

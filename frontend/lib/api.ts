@@ -1,4 +1,4 @@
-import type { Cart, Category, OrderDetail, OrderSummary, ProductDetail, ProductListResult, ProductSummary, ReviewResult } from "@/types/product";
+import type { Cart, Category, OrderDetail, OrderSummary, Pagination, ProductDetail, ProductListResult, ProductSummary, ReviewResult } from "@/types/product";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
 
@@ -117,3 +117,15 @@ export const updateSellerInventory = (id: string, input: { stockQuantity: number
 export const getSellerOrders = () => apiFetch<{ items: Array<Record<string, unknown>> }>("/seller/orders");
 export const getSellerOrder = (id: string) => apiFetch<{ order: Record<string, unknown> }>(`/seller/orders/${id}`);
 export const getSellerTransactions = () => apiFetch<{ items: Array<{ id: string; orderId: string; currency: string; grossAmount: number; platformFeeAmount: number; sellerNetAmount: number; feeRate: number; paymentStatus: string; orderStatus: string; createdAt: string }> }>("/seller/transactions");
+
+export interface AdminDashboard { totalUsers: number; totalSellers: number; activeProducts: number; pendingOrders: number; paidOrders: number; pendingPayments: number; activeFulfillments: number; pendingReviewReports: number; totalOrderValue: number; platformFees: number; sellerNetAmount: number; }
+export const getAdminDashboard = () => apiFetch<AdminDashboard>("/admin/dashboard");
+export const getAdminUsers = (query = "") => apiFetch<{ items: Array<{ id: string; email: string; firstName: string | null; lastName: string | null; role: string; createdAt: string; seller: { storeName: string; status: string } | null; _count: { orders: number; reviews: number } }>; pagination: Pagination }>(`/admin/users${query}`);
+export const getAdminSellers = (query = "") => apiFetch<{ items: Array<{ id: string; storeName: string; slug: string; status: string; user: { email: string }; _count: { products: number; orderItems: number }; transactionSummary: { grossAmount: number; platformFeeAmount: number; sellerNetAmount: number } }>; pagination: Pagination }>(`/admin/sellers${query}`);
+export const getAdminProducts = (query = "") => apiFetch<{ items: Array<{ id: string; title: string; status: string; basePrice: number; seller: { storeName: string }; category: { name: string } }>; pagination: Pagination }>(`/admin/products${query}`);
+export const updateAdminProductStatus = (id: string, status: "DRAFT" | "ACTIVE" | "ARCHIVED") => apiFetch<{ product: { id: string; title: string; status: string } }>(`/admin/products/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
+export const getAdminOrders = (query = "") => apiFetch<{ items: Array<{ id: string; status: string; paymentStatus: string; totalAmount: number; createdAt: string; user: { email: string }; _count: { items: number; payments: number; fulfillments: number } }>; pagination: Pagination }>(`/admin/orders${query}`);
+export const getAdminPayments = (query = "") => apiFetch<{ items: Array<{ id: string; orderId: string; provider: string; status: string; amount: number; currency: string; refunds: Array<{ amount: number; status: string }> }>; pagination: Pagination }>(`/admin/payments${query}`);
+export const getAdminFulfillments = (query = "") => apiFetch<{ items: Array<{ id: string; orderId: string; seller: { storeName: string }; status: string; trackingNumber: string | null; carrier: string | null }>; pagination: Pagination }>(`/admin/fulfillments${query}`);
+export const updateAdminFulfillmentStatus = (id: string, status: string, trackingNumber?: string) => apiFetch<{ fulfillment: { id: string; status: string } }>(`/admin/fulfillments/${id}/status`, { method: "PATCH", body: JSON.stringify({ status, trackingNumber }) });
+export const getAdminAuditLogs = (query = "") => apiFetch<{ items: Array<{ id: string; action: string; targetType: string; targetId: string; createdAt: string; adminUser: { email: string } }>; pagination: Pagination }>(`/admin/audit-logs${query}`);

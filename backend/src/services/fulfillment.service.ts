@@ -29,5 +29,12 @@ export const updateSellerFulfillment = async (sellerId: string, id: string, inpu
 };
 
 export const getCustomerFulfillments = async (userId: string, orderId: string) => { const order = await prisma.order.findFirst({ where: { id: orderId, userId }, select: { id: true } }); if (!order) throw new ApiError(404, "Order not found", "ORDER_NOT_FOUND"); return (await prisma.fulfillment.findMany({ where: { orderId }, select, orderBy: { createdAt: "asc" } })).map(map); };
-export const listAdminFulfillments = async () => (await prisma.fulfillment.findMany({ select, orderBy: { createdAt: "desc" }, take: 100 })).map(map);
+export const listAdminFulfillments = async (input: { page?: number; pageSize?: number; status?: FulfillmentStatus } = {}) => {
+  const page = input.page ?? 1; const pageSize = Math.min(input.pageSize ?? 25, 100); const where = input.status ? { status: input.status } : {};
+  const [items, total] = await Promise.all([
+    prisma.fulfillment.findMany({ where, select, orderBy: [{ createdAt: "desc" }, { id: "desc" }], skip: (page - 1) * pageSize, take: pageSize }),
+    prisma.fulfillment.count({ where }),
+  ]);
+  return { items: items.map(map), pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } };
+};
 export const updateAdminFulfillment = async (id: string, input: { status?: FulfillmentStatus; trackingNumber?: string; carrier?: string }) => updateSellerFulfillment("", id, input).catch(async (error) => { if (!(error instanceof ApiError && error.code === "FULFILLMENT_NOT_FOUND")) throw error; const current = await prisma.fulfillment.findUnique({ where: { id }, select: { id: true, orderId: true, status: true, trackingNumber: true } }); if (!current) throw error; const status = input.status ?? current.status; if (input.status && input.status !== current.status && !transitions[current.status].includes(input.status)) throw new ApiError(409, "Invalid fulfillment transition", "INVALID_FULFILLMENT_TRANSITION"); const updated = await prisma.$transaction(async (tx) => { const now = new Date(); await tx.fulfillment.update({ where: { id }, data: { ...(input.status ? { status } : {}), ...(input.trackingNumber !== undefined ? { trackingNumber: input.trackingNumber || null } : {}), ...(input.carrier !== undefined ? { carrier: input.carrier || null } : {}), ...(status === FulfillmentStatus.SHIPPED ? { shippedAt: current.status === FulfillmentStatus.SHIPPED ? undefined : now } : {}), ...(status === FulfillmentStatus.DELIVERED ? { deliveredAt: current.status === FulfillmentStatus.DELIVERED ? undefined : now } : {}) } }); await syncOrderStatus(tx, current.orderId); return tx.fulfillment.findUniqueOrThrow({ where: { id }, select }); }); return map(updated); });

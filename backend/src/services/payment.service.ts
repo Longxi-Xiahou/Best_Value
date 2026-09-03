@@ -110,9 +110,13 @@ export const listSellerTransactions = async (sellerId: string) => {
   return allocations.map((allocation) => ({ id: allocation.id, orderId: allocation.orderId, currency: allocation.currency, grossAmount: Number(allocation.grossAmount), platformFeeAmount: Number(allocation.platformFeeAmount), sellerNetAmount: Number(allocation.sellerNetAmount), feeRate: Number(allocation.feeRate), paymentStatus: allocation.order.paymentStatus, orderStatus: allocation.order.status, createdAt: allocation.createdAt }));
 };
 
-export const listAdminPayments = async () => {
-  const payments = await prisma.payment.findMany({ orderBy: { createdAt: "desc" }, take: 100, select: { id: true, orderId: true, provider: true, status: true, amount: true, currency: true, createdAt: true, updatedAt: true, refunds: { select: { id: true, amount: true, currency: true, status: true, createdAt: true } } } });
-  return payments.map((payment) => ({ ...payment, amount: Number(payment.amount), refunds: payment.refunds.map((refund) => ({ ...refund, amount: Number(refund.amount) })) }));
+export const listAdminPayments = async (input: { page?: number; pageSize?: number; status?: PaymentStatus } = {}) => {
+  const page = input.page ?? 1; const pageSize = Math.min(input.pageSize ?? 25, 100); const where = input.status ? { status: input.status } : {};
+  const [payments, total] = await Promise.all([
+    prisma.payment.findMany({ where, orderBy: [{ createdAt: "desc" }, { id: "desc" }], skip: (page - 1) * pageSize, take: pageSize, select: { id: true, orderId: true, provider: true, status: true, amount: true, currency: true, createdAt: true, updatedAt: true, refunds: { select: { id: true, amount: true, currency: true, status: true, createdAt: true } } } }),
+    prisma.payment.count({ where }),
+  ]);
+  return { items: payments.map((payment) => ({ ...payment, amount: Number(payment.amount), refunds: payment.refunds.map((refund) => ({ ...refund, amount: Number(refund.amount) })) })), pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } };
 };
 
 export const listAdminAllocations = async () => {

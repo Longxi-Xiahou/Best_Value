@@ -113,6 +113,7 @@ model User {
   reportedReviewReports ReviewReport[] @relation("ReviewReporter")
   resolvedReviewReports ReviewReport[] @relation("ReviewReportModerator")
   reviewModerationActions ReviewModerationAction[]
+  adminAuditLogs AdminAuditLog[]
 }
 
 model Seller {
@@ -491,6 +492,21 @@ model ReviewModerationAction {
 
   @@index([reviewId, createdAt])
   @@index([adminUserId, createdAt])
+}
+
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  adminUserId String
+  action      String   @db.VarChar(100)
+  targetType  String   @db.VarChar(80)
+  targetId    String   @db.VarChar(191)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  adminUser   User     @relation(fields: [adminUserId], references: [id], onDelete: Restrict)
+
+  @@index([adminUserId, createdAt])
+  @@index([targetType, targetId, createdAt])
+  @@index([action, createdAt])
 }
 
 model Wishlist {
