@@ -117,6 +117,9 @@ export const updateSellerInventory = (id: string, input: { stockQuantity: number
 export const getSellerOrders = () => apiFetch<{ items: Array<Record<string, unknown>> }>("/seller/orders");
 export const getSellerOrder = (id: string) => apiFetch<{ order: Record<string, unknown> }>(`/seller/orders/${id}`);
 export const getSellerTransactions = () => apiFetch<{ items: Array<{ id: string; orderId: string; currency: string; grossAmount: number; platformFeeAmount: number; sellerNetAmount: number; feeRate: number; paymentStatus: string; orderStatus: string; createdAt: string }> }>("/seller/transactions");
+export interface SellerImportPreview { valid: boolean; rowCount: number; errors: Array<{ row: number; field?: string; message: string }>; rows: Array<{ row: number; title: string; category: string; price: number; currency: string; stock: number; sku: string; imageUrls: string[] }> }
+export const previewSellerProductImport = (csv: string) => apiFetch<SellerImportPreview>("/seller/products/import/preview", { method: "POST", body: JSON.stringify({ csv }) });
+export const importSellerProducts = (csv: string) => apiFetch<{ importedCount: number; products: Array<{ id: string; title: string; sku: string; status: string }> }>("/seller/products/import", { method: "POST", body: JSON.stringify({ csv }) });
 
 export interface AdminDashboard { totalUsers: number; totalSellers: number; activeProducts: number; pendingOrders: number; paidOrders: number; pendingPayments: number; activeFulfillments: number; pendingReviewReports: number; totalOrderValue: number; platformFees: number; sellerNetAmount: number; }
 export const getAdminDashboard = () => apiFetch<AdminDashboard>("/admin/dashboard");

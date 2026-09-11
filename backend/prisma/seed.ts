@@ -69,6 +69,7 @@ const products: ProductSeed[] = [
 const imageUrl = (title: string, variant = 1) => `https://placehold.co/800x600/0f766e/ffffff?text=${encodeURIComponent(`${title} ${variant}`)}`;
 
 async function main() {
+  if (process.env.NODE_ENV === "production") throw new Error("The development catalog seed is disabled when NODE_ENV=production.");
   const seededPasswordHash = await bcrypt.hash("development-seed-account-not-for-login", 12);
   const sellerUser = await prisma.user.upsert({
     where: { email: "catalog@bestvalue.test" },

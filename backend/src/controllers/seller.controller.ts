@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 import { getSellerDashboard, getSellerForUser, getPublicSeller, onboardSeller } from "../services/seller.service.js";
 import { getSellerProduct, listSellerProducts, createSellerProduct, updateSellerInventory, updateSellerProduct } from "../services/seller-product.service.js";
 import { getSellerOrder, listSellerOrders } from "../services/seller-order.service.js";
+import { importSellerProducts, previewSellerProductImport } from "../services/seller-import.service.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { sellerOnboardingSchema, sellerParamsSchema, sellerProductCreateSchema, sellerProductParamsSchema, sellerProductUpdateSchema, inventoryUpdateSchema, sellerOrderParamsSchema } from "../validators/seller.validation.js";
 
@@ -16,3 +17,5 @@ export const productUpdate: RequestHandler = asyncHandler(async (request, respon
 export const inventory: RequestHandler = asyncHandler(async (request, response) => { const { id } = sellerProductParamsSchema.parse(request.params); const input = inventoryUpdateSchema.parse(request.body); response.json({ success: true, data: { product: await updateSellerInventory(request.seller!.id, id, input.stockQuantity, input.variantId) } }); });
 export const orders: RequestHandler = asyncHandler(async (request, response) => { response.json({ success: true, data: { items: await listSellerOrders(request.seller!.id) } }); });
 export const orderDetail: RequestHandler = asyncHandler(async (request, response) => { const { id } = sellerOrderParamsSchema.parse(request.params); response.json({ success: true, data: { order: await getSellerOrder(request.seller!.id, id) } }); });
+export const productImportPreview: RequestHandler = asyncHandler(async (request, response) => { response.json({ success: true, data: await previewSellerProductImport((request.body as { csv?: unknown } | undefined)?.csv) }); });
+export const productImport: RequestHandler = asyncHandler(async (request, response) => { response.status(201).json({ success: true, data: await importSellerProducts(request.seller!.id, (request.body as { csv?: unknown } | undefined)?.csv) }); });

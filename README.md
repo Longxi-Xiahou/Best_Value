@@ -207,3 +207,25 @@ Authentication remains an HTTP-only, Secure-in-production, SameSite=Lax cookie s
 Structured JSON request/error logs include a request ID and exclude cookies, authorization headers, passwords, connection strings, and payment secrets. Helmet security headers, production HSTS, bounded JSON bodies, endpoint-specific rate limits, and HTTP(S)-only image URL validation are enabled.
 
 Run `npm audit` before deployment and review advisories without blindly applying major upgrades. The current audit reports transitive Prisma, Express/qs, PostCSS, Next.js, and sharp advisories; a safe fix may require a major Next.js upgrade and should be evaluated separately. Deploy in this order: `prisma migrate deploy` against `best_value`, backend with production secrets, CORS/HTTPS verification, then frontend. Configure MySQL network restrictions, least-privilege credentials, backups/restore tests, and log retention with the hosting provider.
+
+## Phase 13A seller data ingestion
+
+Seller product creation and editing remain available under `/seller/products`. The new **Bulk import products** panel accepts a UTF-8 CSV and always creates drafts owned by the authenticated seller. A preview validates every row without writing; import runs only when the complete file is valid and commits all rows in one transaction. A failed row or duplicate SKU therefore cannot leave a partial import.
+
+The intentionally provider-neutral first format is one simple product per row. Variants and product attributes are not encoded in CSV; use the product editor/API for those richer products. Each imported row creates one `ProductVariant` so the required SKU and stock are tracked at variant level while the product itself starts with zero product-level stock.
+
+Required header and example:
+
+```csv
+title,description,brand,category,price,currency,stock,sku,imageUrls
+Trail Bottle,"Insulated steel bottle",Trailmark,camping,32,USD,48,TRAIL-BOTTLE-BLU,https://example.com/bottle.jpg;https://example.com/bottle-side.jpg
+```
+
+`category` is an existing category slug. `imageUrls` is optional and uses semicolons inside a cell. CSV fields may be quoted with standard doubled quotes for an embedded quote. Imports are limited to 512 KiB and 250 data rows; title/description/brand/SKU/image URL lengths follow the product API limits. Prices must be finite non-negative decimal values within the MySQL `Decimal(12,2)` range, stock is an integer from 0 to 1,000,000, and currency is a three-letter code.
+
+For spreadsheet-safety, cells beginning with `=`, `+`, `-`, or `@` are rejected (including formula-like values). Image URLs must use `http` or `https`; `javascript:`, `data:`, `file:`, and other schemes are rejected. Existing SKUs are checked globally because SKU uniqueness is global. Import endpoints are authenticated, seller-authorized, and rate-limited:
+
+- `POST /api/seller/products/import/preview` with `{ "csv": "..." }` returns row-level errors and a safe preview without writes.
+- `POST /api/seller/products/import` with the same payload imports only a fully valid file.
+
+The checked-in Prisma seed remains fictional development/test data. It refuses to run when `NODE_ENV=production`; production catalogs must be created through authenticated seller workflows or a separately reviewed ingestion process. Keep `DATABASE_URL` pointed at `best_value` and never use the seed against an unrelated database.
